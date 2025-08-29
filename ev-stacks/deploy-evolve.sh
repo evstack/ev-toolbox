@@ -1413,6 +1413,11 @@ setup_configuration() {
 		setup_eth_explorer_configuration
 	fi
 
+	# Setup eth-indexer configuration if deployed
+	if [[ $DEPLOY_ETH_INDEXER == "true" ]]; then
+		setup_eth_indexer_configuration
+	fi
+
 	log "SUCCESS" "All configuration setup completed"
 }
 
@@ -1539,6 +1544,10 @@ show_deployment_status() {
 
 	if [[ $DEPLOY_ETH_EXPLORER == "true" ]]; then
 		echo "  🔍 Eth-Explorer: $DEPLOYMENT_DIR/stacks/eth-explorer"
+	fi
+
+	if [[ $DEPLOY_ETH_INDEXER == "true" ]]; then
+		echo "  📊 Eth-Indexer: $DEPLOYMENT_DIR/stacks/eth-indexer"
 	fi
 
 	echo ""
@@ -1839,6 +1848,12 @@ main() {
 	fi
 	if [[ $DEPLOY_ETH_FAUCET == "true" ]]; then
 		deployment_info="$deployment_info + Eth-Faucet"
+	fi
+	if [[ $DEPLOY_ETH_EXPLORER == "true" ]]; then
+		deployment_info="$deployment_info + Eth-Explorer"
+	fi
+	if [[ $DEPLOY_ETH_INDEXER == "true" ]]; then
+		deployment_info="$deployment_info + Eth-Indexer"
 	fi
 	if [[ $DEPLOY_DA_CELESTIA == "true" || $DEPLOY_DA_LOCAL == "true" ]]; then
 		deployment_info="$deployment_info + $SELECTED_DA"
