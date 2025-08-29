@@ -1,0 +1,46 @@
+services:
+  db:
+    container_name: indexer-db
+    image: postgres:17
+    shm_size: 256m
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ponder
+      POSTGRES_PASSWORD: ${INDEXER_POSTGRES_PASSWORD}
+      POSTGRES_DB: ponder
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    command: postgres -c max_connections=200 -c shared_buffers=512MB
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ponder -d ponder" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - evstack_shared
+
+  eth-indexer:
+    image: ghcr.io/01builders/eth-indexer:main
+    container_name: eth-indexer
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PONDER_CHAIN_ID_1: ${CHAIN_ID}
+      PONDER_RPC_URL_1: http://${RETH_HOST}:${RETH_HOST_HTTP_PORT}
+      DATABASE_URL: postgresql://ponder:${INDEXER_POSTGRES_PASSWORD}@$indexer-db:5432/ponder
+      DATABASE_SCHEMA: ponder
+    networks:
+      - evstack_shared
+
+volumes:
+  pg-data:
+    driver: local
+
+networks:
+  evstack_shared:
+    external: true

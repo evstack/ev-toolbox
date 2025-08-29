@@ -11,7 +11,8 @@ readonly SCRIPT_VERSION="1.2.1"
 readonly SCRIPT_NAME="deploy-evolve"
 readonly REPO_URL="https://github.com/evstack/ev-toolbox"
 readonly GITHUB_RAW_BASE="https://raw.githubusercontent.com/evstack/ev-toolbox"
-readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/main/ev-stacks"
+# readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/main/ev-stacks"
+readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/claude/indexer/ev-stacks"
 readonly DEPLOYMENT_DIR="$HOME/evolve-deployment"
 
 # File and directory constants
@@ -35,6 +36,7 @@ readonly SINGLE_SEQUENCER_DIR="single-sequencer"
 readonly FULLNODE_DIR="fullnode"
 readonly ETH_FAUCET_DIR="eth-faucet"
 readonly ETH_EXPLORER_DIR="eth-explorer"
+readonly ETH_INDEXER_DIR="eth-indexer"
 readonly DA_CELESTIA_DIR="da-celestia"
 readonly DA_LOCAL_DIR="da-local"
 
@@ -78,6 +80,7 @@ SELECTED_SEQUENCER=""
 DEPLOY_FULLNODE=false
 DEPLOY_ETH_FAUCET=false
 DEPLOY_ETH_EXPLORER=false
+DEPLOY_ETH_INDEXER=false
 
 # Enhanced logging function that extends the shared one with colors and file logging
 log() {
@@ -396,6 +399,42 @@ select_eth_explorer_deployment() {
 	echo ""
 }
 
+# Interactive eth-indexer selection
+select_eth_indexer_deployment() {
+	log "CONFIG" "Selecting eth-indexer deployment option..."
+
+	echo ""
+	echo "📊 Do you want to deploy an eth-indexer service?"
+	echo "  1) Yes - Deploy eth-indexer for blockchain data indexing"
+	echo "  2) No - Skip eth-indexer deployment"
+	echo ""
+	echo "ℹ️  Note: Eth-indexer provides advanced blockchain data indexing and analytics"
+	echo ""
+
+	while true; do
+		echo -n "Please select an option (1-2): "
+		read -r choice
+
+		case $choice in
+		1)
+			DEPLOY_ETH_INDEXER=true
+			log "SUCCESS" "Selected: Deploy eth-indexer service"
+			break
+			;;
+		2)
+			DEPLOY_ETH_INDEXER=false
+			log "SUCCESS" "Selected: Skip eth-indexer"
+			break
+			;;
+		*)
+			echo "❌ Invalid choice. Please enter 1 or 2."
+			;;
+		esac
+	done
+
+	echo ""
+}
+
 # Interactive DA selection
 select_da_layer() {
 	log "CONFIG" "Selecting Data Availability layer..."
@@ -620,6 +659,29 @@ download_eth_explorer_files() {
 	log "SUCCESS" "Eth-explorer deployment files downloaded successfully"
 }
 
+# Download deployment files for eth-indexer
+download_eth_indexer_files() {
+	log "DOWNLOAD" "Downloading eth-indexer deployment files..."
+
+	# Create eth-indexer subfolder
+	mkdir -p "$DEPLOYMENT_DIR/stacks/eth-indexer" || error_exit "Failed to create eth-indexer directory"
+
+	cd "$DEPLOYMENT_DIR/stacks/eth-indexer" || error_exit "Failed to change to eth-indexer directory"
+
+	local files=(
+		"stacks/eth-indexer/.env"
+		"stacks/eth-indexer/docker-compose.yml"
+	)
+
+	for file in "${files[@]}"; do
+		log "DEBUG" "Downloading $file..."
+		local filename=$(basename "$file")
+		curl -fsSL "$BASE_URL/$file" -o "$filename" || error_exit "Failed to download $filename"
+	done
+
+	log "SUCCESS" "Eth-indexer deployment files downloaded successfully"
+}
+
 # Download shared library files
 download_shared_files() {
 	log "DOWNLOAD" "Downloading shared library files..."
@@ -682,6 +744,11 @@ download_deployment_files() {
 	# Download eth-explorer files if requested
 	if [[ $DEPLOY_ETH_EXPLORER == "true" ]]; then
 		download_eth_explorer_files
+	fi
+
+	# Download eth-indexer files if requested
+	if [[ $DEPLOY_ETH_INDEXER == "true" ]]; then
+		download_eth_indexer_files
 	fi
 
 	log "SUCCESS" "All deployment files downloaded successfully"
@@ -1266,6 +1333,59 @@ setup_eth_explorer_configuration() {
 	log "SUCCESS" "Eth-explorer configuration setup completed"
 }
 
+# Configuration management for eth-indexer
+setup_eth_indexer_configuration() {
+	log "CONFIG" "Setting up eth-indexer configuration..."
+
+	# Change to eth-indexer directory
+	cd "$DEPLOYMENT_DIR/stacks/eth-indexer" || error_exit "Failed to change to eth-indexer directory"
+
+	local env_file=".env"
+
+	if [[ ! -f $env_file ]]; then
+		error_exit "Eth-indexer environment file not found: $env_file"
+	fi
+
+	if [[ ! -r $env_file ]]; then
+		error_exit "Eth-indexer environment file is not readable: $env_file"
+	fi
+
+	# Check for missing CHAIN_ID and get it from sequencer configuration
+	if grep -q "^CHAIN_ID=$" "$env_file" || ! grep -q "^CHAIN_ID=" "$env_file"; then
+		log "CONFIG" "Setting CHAIN_ID for eth-indexer from sequencer configuration..."
+
+		# Get CHAIN_ID from single-sequencer .env file
+		local sequencer_env="$DEPLOYMENT_DIR/stacks/single-sequencer/.env"
+		if [[ -f $sequencer_env ]]; then
+			local chain_id=$(grep "^CHAIN_ID=" "$sequencer_env" | cut -d'=' -f2 | tr -d '"')
+
+			if [[ -n $chain_id ]]; then
+				# Update CHAIN_ID in eth-indexer .env file
+				update_env_var "$env_file" "CHAIN_ID" "$chain_id"
+				log "SUCCESS" "CHAIN_ID set to: $chain_id"
+			else
+				log "WARN" "CHAIN_ID is empty in sequencer .env file. Eth-indexer may not start properly."
+				# Still add the empty CHAIN_ID to eth-indexer .env to avoid undefined variable warnings
+				update_env_var "$env_file" "CHAIN_ID" ""
+			fi
+		else
+			log "WARN" "Sequencer .env file not found. Adding empty CHAIN_ID to prevent warnings."
+			# Add empty CHAIN_ID to eth-indexer .env to avoid undefined variable warnings
+			update_env_var "$env_file" "CHAIN_ID" ""
+		fi
+	fi
+
+	# Check for missing INDEXER_POSTGRES_PASSWORD and generate if empty
+	if grep -q "^INDEXER_POSTGRES_PASSWORD=$" "$env_file" || ! grep -q "^INDEXER_POSTGRES_PASSWORD=" "$env_file"; then
+		log "CONFIG" "Generating random PostgreSQL password for eth-indexer..."
+		local postgres_password=$(openssl rand -hex 16 | tr -d '\n')
+		update_env_var "$env_file" "INDEXER_POSTGRES_PASSWORD" "$postgres_password"
+		log "SUCCESS" "PostgreSQL password generated and set for eth-indexer"
+	fi
+
+	log "SUCCESS" "Eth-indexer configuration setup completed"
+}
+
 # Configuration management
 setup_configuration() {
 	log "CONFIG" "Setting up configuration..."
@@ -1708,6 +1828,9 @@ main() {
 
 	# Interactive eth-explorer selection
 	select_eth_explorer_deployment
+
+	# Interactive eth-indexer selection
+	select_eth_indexer_deployment
 
 	# Show what will be deployed
 	local deployment_info="$SELECTED_SEQUENCER"
