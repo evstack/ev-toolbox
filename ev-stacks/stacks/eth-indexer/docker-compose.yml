@@ -32,7 +32,7 @@ services:
     environment:
       PONDER_CHAIN_ID_1: ${CHAIN_ID}
       PONDER_RPC_URL_1: http://${RETH_HOST}:${RETH_HOST_HTTP_PORT}
-      DATABASE_URL: postgresql://ponder:${INDEXER_POSTGRES_PASSWORD}@$indexer-db:5432/ponder
+      DATABASE_URL: postgresql://ponder:${INDEXER_POSTGRES_PASSWORD}@indexer-db:5432/ponder
       DATABASE_SCHEMA: ponder
     networks:
       - evstack_shared
