@@ -187,10 +187,11 @@ $HOME/evolve-deployment/
 └── stacks/
     ├── single-sequencer/       # Single sequencer stack
     ├── fullnode/              # Full node stack (optional)
-    ├── da-celestia/           # Celestia DA stack
-    ├── da-local/              # Local DA stack (development)
+    ├── da-celestia/           # Celestia DA stack (optional)
+    ├── da-local/              # Local DA stack (optional)
+    ├── eth-faucet/            # Ethereum faucet stack (optional)
     ├── eth-explorer/          # Blockchain explorer stack (optional)
-    └── eth-faucet/            # Token faucet stack (optional)
+    └── eth-indexer/           # Blockchain indexer stack (optional)
 ```
 
 ### Verifying the Deployment
@@ -277,32 +278,56 @@ Additional full node deployment for enhanced network connectivity:
 - Ev-node RPC: `http://localhost:7331`
 - Ev-node Prometheus Metrics: `http://localhost:26662/metrics`
 
-### 🔍 Blockchain Explorer (`stacks/eth-explorer/`)
+### 💰 Ethereum Faucet (`stacks/eth-faucet/`)
 
-Blockscout-based blockchain explorer for monitoring and analyzing the chain:
-
-- **Blockscout Backend**: API and indexing services
-- **Blockscout Frontend**: Web interface for blockchain exploration
-- **PostgreSQL**: Database for storing indexed blockchain data
-- **Redis**: Caching layer for improved performance
-- **Stats Service**: Analytics and statistics generation
-- **Smart Contract Verifier**: Contract verification services
+A simple Ethereum faucet for distributing test ETH on your local network.
 
 **Services:**
 
-- Explorer Frontend: `http://localhost:3000`
-- Explorer Backend API: `http://localhost:4000` (internal)
+- **eth-faucet**: Web interface for requesting test ETH
 
-### 💰 Token Faucet (`stacks/eth-faucet/`)
-
-Web-based faucet for distributing test tokens:
-
-- **Eth-Faucet**: Simple web interface for requesting test tokens
-- **Purpose**: Provides easy access to test tokens for development
-
-**Services:**
+**Ports:**
 
 - Faucet Web Interface: `http://localhost:8081`
+
+**Dependencies:**
+
+- Requires a running Ethereum node (single-sequencer or fullnode)
+- Requires private key configuration for signing transactions
+
+### 🔍 Ethereum Explorer (`stacks/eth-explorer/`)
+
+A Blockscout-based blockchain explorer for viewing and analyzing blockchain data.
+
+**Services:**
+
+- **explorer-db**: PostgreSQL database for blockchain data storage
+- **eth-explorer**: Blockscout web interface
+
+**Ports:**
+
+- Explorer Web Interface: `http://localhost:4000`
+
+**Dependencies:**
+
+- Requires a running Ethereum node (single-sequencer or fullnode)
+
+### 📊 Ethereum Indexer (`stacks/eth-indexer/`)
+
+An Ethereum blockchain indexer built with Ponder for indexing and querying blockchain data.
+
+**Services:**
+
+- **db**: PostgreSQL database for storing indexed data
+- **eth-indexer**: Ponder-based indexer service
+
+**Ports:**
+
+- Indexer API: `http://localhost:42069`
+
+**Dependencies:**
+
+- Requires a running Ethereum node (single-sequencer or fullnode)
 
 ## Configuration
 
@@ -413,22 +438,31 @@ The script automatically configures:
      - Auto-retrieves genesis hash from reth-sequencer
      - Imports JWT tokens and DA auth tokens from shared volumes
 
-#### Blockchain Explorer Stack (Optional)
+#### Eth-Faucet Stack (Optional)
 
-1. **db**: PostgreSQL database for storing indexed blockchain data
-2. **stats-db**: Separate PostgreSQL instance for analytics data
-3. **redis**: Redis cache for improved performance
-4. **stats**: Analytics service for generating blockchain statistics
-5. **blockscout-backend**: Main API and indexing service
-6. **blockscout-frontend**: Web interface for blockchain exploration
-7. **smart-contract-verifier**: Service for verifying smart contracts
+1. **eth-faucet**: Web-based faucet service for distributing test tokens
+   - **Configuration**:
+     - Requires private key configuration for signing transactions
+     - Connects to sequencer or fullnode RPC endpoint
+     - Configurable token distribution amounts and cooldown periods
 
-#### Token Faucet Stack (Optional)
+#### Eth-Explorer Stack (Optional)
 
-1. **eth-faucet**: Web-based faucet service
-   - **Configuration**: Connects to sequencer RPC endpoint
-   - **Purpose**: Distributes test tokens to users
-   - **Security**: Configurable rate limiting and proxy count
+1. **explorer-db**: PostgreSQL database for blockchain data storage
+2. **eth-explorer**: Blockscout blockchain explorer web interface
+   - **Configuration**:
+     - Automatically generates SECRET_KEY_BASE for session security
+     - Connects to sequencer or fullnode RPC endpoint
+     - Indexes blockchain data for web-based exploration
+
+#### Eth-Indexer Stack (Optional)
+
+1. **indexer-db**: PostgreSQL database for indexed blockchain data
+2. **eth-indexer**: Ponder-based blockchain indexer service
+   - **Configuration**:
+     - Connects to sequencer or fullnode RPC endpoint
+     - Provides GraphQL API for querying indexed data
+     - Configurable indexing rules and data schemas
 
 ### 4. Configuration Files
 
@@ -527,26 +561,26 @@ After deployment, you'll have access to these endpoints:
   - Data availability queries
   - Blob submission and retrieval
 
-**Local DA:**
-- **Local DA Service**: Internal network communication only
-  - No external endpoints exposed
-  - Used internally by sequencer and full nodes
+### Eth-Faucet Stack (if deployed)
 
-### Optional Services
+- **Faucet Web Interface**: `http://localhost:8081`
+  - Web-based interface for requesting test tokens
+  - Configurable distribution amounts and cooldown periods
+  - Connects to your local blockchain for token distribution
 
-**Blockchain Explorer (if deployed):**
-- **Frontend**: `http://localhost:3000`
-  - Web interface for blockchain exploration
-  - Transaction and block browsing
-  - Account and contract information
-- **Backend API**: `http://localhost:4000` (internal)
-  - REST API for blockchain data
-  - Used by frontend and external integrations
+### Eth-Explorer Stack (if deployed)
 
-**Token Faucet (if deployed):**
-- **Web Interface**: `http://localhost:8081`
-  - Simple form for requesting test tokens
-  - Rate-limited token distribution
+- **Blockscout Web Interface**: `http://localhost:4000`
+  - Blockchain explorer for viewing transactions, blocks, and addresses
+  - Search functionality for transactions and addresses
+  - Contract verification and interaction capabilities
+
+### Eth-Indexer Stack (if deployed)
+
+- **Indexer API**: `http://localhost:42069`
+  - GraphQL API for querying indexed blockchain data
+  - Real-time blockchain data indexing
+  - Custom query capabilities for dApp development
 
 ## Customizing the Deployment
 
@@ -558,8 +592,26 @@ You can edit the `.env` files to change:
 - **Block time**: Modify `EVM_BLOCK_TIME` (default: 500ms)
 - **DA settings**: Update `DA_START_HEIGHT`, `DA_HEADER_NAMESPACE`, or `DA_DATA_NAMESPACE`
 - **Ports**: Change port mappings to avoid conflicts
-- **Explorer settings**: Modify `EXPLORER_FRONTEND_PORT` or database configurations
-- **Faucet settings**: Update `ETH_FAUCET_PORT` or configure different private keys
+
+#### Stack-Specific Configuration
+
+**Eth-Faucet Customization**:
+- **Private Key**: Update `PRIVATE_KEY` in `stacks/eth-faucet/.env`
+- **Distribution Amount**: Modify faucet distribution settings
+- **Cooldown Period**: Adjust request frequency limits
+- **Port**: Change `ETH_FAUCET_PORT` to avoid conflicts
+
+**Eth-Explorer Customization**:
+- **Database**: Update `EXPLORER_POSTGRES_PASSWORD` for security
+- **Secret Key**: Generate new `SECRET_KEY_BASE` for production
+- **Port**: Change explorer port mapping in docker-compose.yml
+- **Chain Name**: Customize blockchain display name
+
+**Eth-Indexer Customization**:
+- **Database**: Update `INDEXER_POSTGRES_PASSWORD` for security
+- **Indexing Rules**: Modify Ponder configuration for custom data schemas
+- **Port**: Change `ETH_INDEXER_PORT` to avoid conflicts
+- **Performance**: Adjust database connection settings
 
 ### 2. Adding Custom Genesis
 

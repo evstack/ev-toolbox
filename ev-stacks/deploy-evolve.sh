@@ -1599,6 +1599,13 @@ show_deployment_status() {
 		echo ""
 	fi
 
+	if [[ $DEPLOY_ETH_INDEXER == "true" ]]; then
+		echo "🚀 Start the Eth-Indexer stack:"
+		echo "  1. cd $DEPLOYMENT_DIR/stacks/eth-indexer"
+		echo "  2. docker compose up -d"
+		echo ""
+	fi
+
 	echo "🌐 Service Endpoints:"
 
 	if [[ $SELECTED_SEQUENCER == "single-sequencer" ]]; then
@@ -1626,6 +1633,12 @@ show_deployment_status() {
 	if [[ $DEPLOY_ETH_EXPLORER == "true" ]]; then
 		echo "  🔍 Eth-Explorer:"
 		echo "    - Blockscout Web Interface: http://localhost:3000"
+		echo ""
+	fi
+
+	if [[ $DEPLOY_ETH_INDEXER == "true" ]]; then
+		echo "  📊 Eth-Indexer:"
+		echo "    - Indexer API: http://localhost:42069"
 		echo ""
 	fi
 
