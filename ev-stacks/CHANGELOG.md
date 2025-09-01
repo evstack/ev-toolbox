@@ -5,6 +5,18 @@ All notable changes to the EV-Stacks deployment framework will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-09-01
+
+### Added
+- **Ethereum Indexer Service**: New `eth-indexer` stack for blockchain data indexing
+  - Based on [01builders/eth-indexer](https://github.com/01builders/eth-indexer)
+  - Ponder-based indexing service for efficient blockchain data processing
+  - PostgreSQL database integration for indexed data storage
+  - GraphQL API endpoint for querying indexed blockchain data
+  - Configurable indexer port and database credentials
+  - Health checks and service dependencies for reliable operation
+  - Users can fork the repository to add custom indexing use cases
+
 ## [1.2.1] - 2025-08-27
 
 ### Fixed

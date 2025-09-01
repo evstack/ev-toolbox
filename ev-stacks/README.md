@@ -314,12 +314,12 @@ A Blockscout-based blockchain explorer for viewing and analyzing blockchain data
 
 ### 📊 Ethereum Indexer (`stacks/eth-indexer/`)
 
-An Ethereum blockchain indexer built with Ponder for indexing and querying blockchain data.
+An Ethereum blockchain indexer built with Ponder for indexing and querying blockchain data. Based on [01builders/eth-indexer](https://github.com/01builders/eth-indexer).
 
 **Services:**
 
 - **db**: PostgreSQL database for storing indexed data
-- **eth-indexer**: Ponder-based indexer service
+- **eth-indexer**: Ponder-based indexer service (based on [01builders/eth-indexer](https://github.com/01builders/eth-indexer))
 
 **Ports:**
 
@@ -328,6 +328,12 @@ An Ethereum blockchain indexer built with Ponder for indexing and querying block
 **Dependencies:**
 
 - Requires a running Ethereum node (single-sequencer or fullnode)
+
+**Customization:**
+
+- For custom indexing use cases, fork the [01builders/eth-indexer](https://github.com/01builders/eth-indexer) repository
+- The exact features and configuration options are described in the repository's README
+- Modify the indexer configuration to suit your specific blockchain data needs
 
 ## Configuration
 
@@ -458,11 +464,12 @@ The script automatically configures:
 #### Eth-Indexer Stack (Optional)
 
 1. **indexer-db**: PostgreSQL database for indexed blockchain data
-2. **eth-indexer**: Ponder-based blockchain indexer service
+2. **eth-indexer**: Ponder-based blockchain indexer service (based on [01builders/eth-indexer](https://github.com/01builders/eth-indexer))
    - **Configuration**:
      - Connects to sequencer or fullnode RPC endpoint
      - Provides GraphQL API for querying indexed data
      - Configurable indexing rules and data schemas
+     - Users can fork the repository to add custom indexing use cases
 
 ### 4. Configuration Files
 
@@ -612,6 +619,8 @@ You can edit the `.env` files to change:
 - **Indexing Rules**: Modify Ponder configuration for custom data schemas
 - **Port**: Change `ETH_INDEXER_PORT` to avoid conflicts
 - **Performance**: Adjust database connection settings
+- **Custom Use Cases**: Fork the [01builders/eth-indexer](https://github.com/01builders/eth-indexer) repository to add custom indexing functionality
+- **Features**: See the repository's README for detailed feature descriptions and configuration options
 
 ### 2. Adding Custom Genesis
 
