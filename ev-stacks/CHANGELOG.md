@@ -5,13 +5,17 @@ All notable changes to the EV-Stacks deployment framework will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2025-09-02
+
+### Fixed
+- **Fullnode deployment script**: `entrypoint.ev-reth.sh` is now deployed as intended
+
 ## [1.4.0] - 2025-09-01
 
 ### Changed
 - **Dependencies**:
   - Upgraded ghcr.io/celestiaorg/celestia-node to `v0.25.3-mocha`
   - Upgraded ghcr.io/celestiaorg/celestia-app-standalone to `v5.0.2-mocha`
-
 
 ## [1.3.0] - 2025-09-01
 

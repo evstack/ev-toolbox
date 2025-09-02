@@ -541,6 +541,7 @@ download_fullnode_files() {
 	local files=(
 		"stacks/fullnode/.env"
 		"$docker_compose_file"
+		"stacks/fullnode/entrypoint.ev-reth.sh"
 		"stacks/fullnode/entrypoint.fullnode.sh"
 	)
 
