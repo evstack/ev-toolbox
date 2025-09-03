@@ -1,0 +1,87 @@
+# Evolve Deployment Configuration Schema
+# This file serves as both documentation and an example configuration
+
+# Deployment configuration
+deployment:
+  # Directory where deployment files will be created (optional)
+  # Default: $HOME/evolve-deployment
+  directory: ""
+
+  # Enable verbose logging (optional)
+  # Default: false
+  verbose: false
+
+  # Perform dry run without actual deployment (optional)
+  # Default: false
+  dry_run: false
+
+  # Force installation even if components exist (optional)
+  # Default: false
+  force: false
+
+  # Log file path (optional)
+  log_file: ""
+
+  # Disable cleanup on error (optional)
+  # Default: false (cleanup enabled)
+  no_cleanup: false
+
+# Data Availability layer configuration
+da_layer:
+  # Type of DA layer to use
+  # Options: "da-local", "da-celestia"
+  # Required
+  type: "da-local"
+
+  # Celestia-specific configuration (only required if type is "da-celestia")
+  celestia:
+    # Header namespace for Celestia DA
+    # Example: "namespace_test_header"
+    header_namespace: ""
+
+    # Data namespace for Celestia DA
+    # Example: "namespace_test_data"
+    data_namespace: ""
+
+# Sequencer configuration
+sequencer:
+  # Sequencer topology type
+  # Options: "single-sequencer"
+  # Required
+  type: "single-sequencer"
+
+  # Chain ID for the blockchain
+  # Example: 1234
+  # Required
+  chain_id: 1234
+
+  # Genesis allocation addresses
+  # List of Ethereum addresses that will receive initial token balances
+  # At least one address is required
+  # Example: ["0x61F929626841DC9ed2268e62Ef408Bd29d995293"]
+  genesis_addresses:
+    - "0x61F929626841DC9ed2268e62Ef408Bd29d995293"
+
+# Additional services configuration
+services:
+  # Deploy fullnode alongside sequencer
+  # Default: false
+  fullnode: false
+
+  # Deploy eth-faucet service
+  # Default: false
+  eth_faucet: false
+
+  # Eth-faucet specific configuration (only required if eth_faucet is true)
+  faucet_config:
+    # Private key for the faucet (64 hex chars, optionally prefixed with 0x)
+    # Example: "0x11f736e572551c472f4308299735c718447b0d03980b18c951950bbc5beb3ebb"
+    private_key: ""
+
+  # Deploy eth-explorer service (Blockscout)
+  # Default: false
+  eth_explorer: false
+
+  # Deploy eth-indexer service
+  # Default: false
+  eth_indexer: false

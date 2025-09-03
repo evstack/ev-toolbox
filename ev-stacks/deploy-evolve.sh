@@ -7,12 +7,13 @@
 set -euo pipefail
 
 # Script metadata
-readonly SCRIPT_VERSION="1.4.0"
+readonly SCRIPT_VERSION="1.5.0"
 readonly SCRIPT_NAME="deploy-evolve"
 readonly REPO_URL="https://github.com/evstack/ev-toolbox"
 readonly GITHUB_RAW_BASE="https://raw.githubusercontent.com/evstack/ev-toolbox"
-readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/main/ev-stacks"
-readonly DEPLOYMENT_DIR="$HOME/evolve-deployment"
+# readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/main/ev-stacks"
+readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/claude/automate/ev-stacks"
+DEPLOYMENT_DIR="$HOME/evolve-deployment"
 
 # File and directory constants
 readonly ENV_FILE=".env"
@@ -80,6 +81,16 @@ DEPLOY_FULLNODE=false
 DEPLOY_ETH_FAUCET=false
 DEPLOY_ETH_EXPLORER=false
 DEPLOY_ETH_INDEXER=false
+CONFIG_FILE=""
+AUTO_MODE=false
+VALIDATE_CONFIG_ONLY=false
+
+# Configuration variables from YAML
+CONFIG_CHAIN_ID=""
+CONFIG_GENESIS_ADDRESSES=()
+CONFIG_DA_HEADER_NAMESPACE=""
+CONFIG_DA_DATA_NAMESPACE=""
+CONFIG_FAUCET_PRIVATE_KEY=""
 
 # Enhanced logging function that extends the shared one with colors and file logging
 log() {
@@ -975,15 +986,24 @@ setup_sequencer_configuration() {
 		log "SUCCESS" "EVM signer passphrase generated and set"
 	fi
 
-	# Check for missing CHAIN_ID and prompt user
+	# Check for missing CHAIN_ID and use config or prompt user
 	if grep -q "^CHAIN_ID=$" "$env_file" || ! grep -q "^CHAIN_ID=" "$env_file"; then
-		echo "Chain ID is required for the deployment."
-		echo "Please enter a chain ID (e.g., 1234 for development, or your custom chain ID):"
-		read -r chain_id
+		local chain_id=""
 
-		# Validate chain ID is not empty
-		if [[ -z "$chain_id" ]]; then
-			error_exit "Chain ID cannot be empty"
+		if [[ $AUTO_MODE == "true" && -n "$CONFIG_CHAIN_ID" ]]; then
+			# Use chain ID from configuration
+			chain_id="$CONFIG_CHAIN_ID"
+			log "CONFIG" "Using chain ID from configuration: $chain_id"
+		else
+			# Interactive mode - prompt user
+			echo "Chain ID is required for the deployment."
+			echo "Please enter a chain ID (e.g., 1234 for development, or your custom chain ID):"
+			read -r chain_id
+
+			# Validate chain ID is not empty
+			if [[ -z "$chain_id" ]]; then
+				error_exit "Chain ID cannot be empty"
+			fi
 		fi
 
 		# Update chain ID in .env file
@@ -994,8 +1014,23 @@ setup_sequencer_configuration() {
 		update_genesis_chain_id "$chain_id"
 	fi
 
-	# Prompt user for Ethereum addresses for genesis allocation
-	setup_genesis_allocation
+	# Setup genesis allocation (use config or prompt user)
+	if [[ $AUTO_MODE == "true" && ${#CONFIG_GENESIS_ADDRESSES[@]} -gt 0 ]]; then
+		# Use addresses from configuration
+		log "CONFIG" "Using genesis addresses from configuration..."
+		update_genesis_allocation "${CONFIG_GENESIS_ADDRESSES[@]}"
+		echo ""
+		echo "✅ Genesis block updated with configured addresses:"
+		for addr in "${CONFIG_GENESIS_ADDRESSES[@]}"; do
+			echo "   - $addr"
+		done
+		echo ""
+		echo "💡 Each address will receive a large initial balance for testing purposes."
+		echo ""
+	else
+		# Interactive mode - prompt user
+		setup_genesis_allocation
+	fi
 
 	# If DA Celestia is deployed, add DA configuration to single-sequencer
 	if [[ $DEPLOY_DA_CELESTIA == "true" ]]; then
@@ -1173,14 +1208,28 @@ setup_da_celestia_configuration() {
 		error_exit "DA-Celestia environment file is not readable: $env_file"
 	fi
 
-	# Check for missing DA_HEADER_NAMESPACE and prompt user
+	# Check for missing DA_HEADER_NAMESPACE and use config or prompt user
 	if grep -q "^DA_HEADER_NAMESPACE=$" "$env_file" || ! grep -q "^DA_HEADER_NAMESPACE=" "$env_file"; then
-		prompt_namespace_input "Header" "DA_HEADER_NAMESPACE" "$env_file" "namespace_test_header"
+		if [[ $AUTO_MODE == "true" && -n "$CONFIG_DA_HEADER_NAMESPACE" ]]; then
+			# Use header namespace from configuration
+			update_env_var "$env_file" "DA_HEADER_NAMESPACE" "$CONFIG_DA_HEADER_NAMESPACE"
+			log "CONFIG" "Using DA header namespace from configuration: $CONFIG_DA_HEADER_NAMESPACE"
+		else
+			# Interactive mode - prompt user
+			prompt_namespace_input "Header" "DA_HEADER_NAMESPACE" "$env_file" "namespace_test_header"
+		fi
 	fi
 
-	# Check for missing DA_DATA_NAMESPACE and prompt user
+	# Check for missing DA_DATA_NAMESPACE and use config or prompt user
 	if grep -q "^DA_DATA_NAMESPACE=$" "$env_file" || ! grep -q "^DA_DATA_NAMESPACE=" "$env_file"; then
-		prompt_namespace_input "Data" "DA_DATA_NAMESPACE" "$env_file" "namespace_test_data"
+		if [[ $AUTO_MODE == "true" && -n "$CONFIG_DA_DATA_NAMESPACE" ]]; then
+			# Use data namespace from configuration
+			update_env_var "$env_file" "DA_DATA_NAMESPACE" "$CONFIG_DA_DATA_NAMESPACE"
+			log "CONFIG" "Using DA data namespace from configuration: $CONFIG_DA_DATA_NAMESPACE"
+		else
+			# Interactive mode - prompt user
+			prompt_namespace_input "Data" "DA_DATA_NAMESPACE" "$env_file" "namespace_test_data"
+		fi
 	fi
 
 	log "SUCCESS" "DA-Celestia configuration setup completed"
@@ -1215,58 +1264,73 @@ setup_eth_faucet_configuration() {
 		error_exit "Eth-faucet environment file is not readable: $env_file"
 	fi
 
-	# Check for missing PRIVATE_KEY and prompt user
+	# Check for missing PRIVATE_KEY and use config or prompt user
 	if grep -q "^PRIVATE_KEY=$" "$env_file" || ! grep -q "^PRIVATE_KEY=" "$env_file"; then
-		echo ""
-		echo "🔑 Private Key Configuration for Eth-Faucet"
-		echo "============================================"
-		echo ""
-		echo "The eth-faucet service requires a private key to sign transactions and distribute tokens."
-		echo ""
-		echo "⚠️  SECURITY WARNING:"
-		echo "   • This private key will control the faucet's funds"
-		echo "   • Make sure this account has sufficient balance for token distribution"
-		echo "   • Use a dedicated account for the faucet, not your main wallet"
-		echo "   • The private key will be stored in the .env file"
-		echo ""
-		echo "📝 Private key format:"
-		echo "   • 64 hexadecimal characters (without 0x prefix)"
-		echo "   • OR 66 characters (with 0x prefix)"
-		echo "   • Example: 0x11f736e572551c472f4308299735c718447b0d03980b18c951950bbc5beb3ebb"
-		echo ""
+		local private_key=""
 
-		while true; do
-			echo -n "Please enter the private key for the eth-faucet: "
-			read -r private_key
-
-			# Validate private key format
-			if [[ -z "$private_key" ]]; then
-				echo "❌ Error: Private key cannot be empty."
-				continue
+		if [[ $AUTO_MODE == "true" && -n "$CONFIG_FAUCET_PRIVATE_KEY" ]]; then
+			# Use private key from configuration
+			private_key="$CONFIG_FAUCET_PRIVATE_KEY"
+			# Ensure private key has 0x prefix for consistency
+			if [[ ! $private_key =~ ^0x ]]; then
+				private_key="0x$private_key"
 			fi
+			log "CONFIG" "Using faucet private key from configuration"
+		else
+			# Interactive mode - prompt user
+			echo ""
+			echo "🔑 Private Key Configuration for Eth-Faucet"
+			echo "============================================"
+			echo ""
+			echo "The eth-faucet service requires a private key to sign transactions and distribute tokens."
+			echo ""
+			echo "⚠️  SECURITY WARNING:"
+			echo "   • This private key will control the faucet's funds"
+			echo "   • Make sure this account has sufficient balance for token distribution"
+			echo "   • Use a dedicated account for the faucet, not your main wallet"
+			echo "   • The private key will be stored in the .env file"
+			echo ""
+			echo "📝 Private key format:"
+			echo "   • 64 hexadecimal characters (without 0x prefix)"
+			echo "   • OR 66 characters (with 0x prefix)"
+			echo "   • Example: 0x11f736e572551c472f4308299735c718447b0d03980b18c951950bbc5beb3ebb"
+			echo ""
 
-			if validate_private_key "$private_key"; then
-				# Ensure private key has 0x prefix for consistency
-				if [[ ! $private_key =~ ^0x ]]; then
-					private_key="0x$private_key"
+			while true; do
+				echo -n "Please enter the private key for the eth-faucet: "
+				read -r private_key
+
+				# Validate private key format
+				if [[ -z "$private_key" ]]; then
+					echo "❌ Error: Private key cannot be empty."
+					continue
 				fi
-				echo "✅ Valid private key format."
-				break
-			else
-				echo "❌ Error: Invalid private key format."
-				echo "   Private key must be 64 hexadecimal characters (optionally prefixed with 0x)."
-				echo "   Example: 0x11f736e572551c472f4308299735c718447b0d03980b18c951950bbc5beb3ebb"
-			fi
-		done
+
+				if validate_private_key "$private_key"; then
+					# Ensure private key has 0x prefix for consistency
+					if [[ ! $private_key =~ ^0x ]]; then
+						private_key="0x$private_key"
+					fi
+					echo "✅ Valid private key format."
+					break
+				else
+					echo "❌ Error: Invalid private key format."
+					echo "   Private key must be 64 hexadecimal characters (optionally prefixed with 0x)."
+					echo "   Example: 0x11f736e572551c472f4308299735c718447b0d03980b18c951950bbc5beb3ebb"
+				fi
+			done
+		fi
 
 		# Update private key in .env file
 		update_env_var "$env_file" "PRIVATE_KEY" "$private_key"
 		log "SUCCESS" "Private key configured for eth-faucet"
 
-		echo ""
-		echo "✅ Eth-faucet private key has been configured."
-		echo "💡 Make sure the corresponding address has sufficient balance for token distribution."
-		echo ""
+		if [[ $AUTO_MODE != "true" ]]; then
+			echo ""
+			echo "✅ Eth-faucet private key has been configured."
+			echo "💡 Make sure the corresponding address has sufficient balance for token distribution."
+			echo ""
+		fi
 	fi
 
 	log "SUCCESS" "Eth-faucet configuration setup completed"
@@ -1669,21 +1733,170 @@ OPTIONS:
     -l, --log-file FILE     Log output to specified file
     --no-cleanup            Don't cleanup on error
     --deployment-dir DIR    Use custom deployment directory (default: $DEPLOYMENT_DIR)
+    -c, --config FILE       Use YAML configuration file for automated deployment
+    --auto                  Enable automatic mode (no interactive prompts)
+    --validate-config       Validate configuration file and exit
 
 EXAMPLES:
-    # Basic deployment (will prompt for DA selection)
+    # Interactive deployment (will prompt for configuration)
     $0
 
-    # Verbose deployment with logging
-    $0 --verbose --log-file deployment.log
+    # Automated deployment using YAML configuration
+    $0 --config config.yaml
 
-    # Dry run to see what would be done
-    $0 --dry-run
+    # Automated deployment with verbose logging
+    $0 --config config.yaml --verbose --log-file deployment.log
 
-    # One-liner remote execution
+    # Dry run with configuration file
+    $0 --config config.yaml --dry-run
+
+    # One-liner remote execution (interactive)
     curl -fsSL $GITHUB_RAW_BASE/main/ev-stack/deploy-evolve.sh | bash
 
+    # Download configuration schema
+    curl -fsSL $GITHUB_RAW_BASE/main/ev-stacks/config-schema.yaml -o config.yaml
+
 EOF
+}
+
+# Simple YAML parser for configuration
+parse_yaml_config() {
+	local config_file="$1"
+
+	if [[ ! -f "$config_file" ]]; then
+		error_exit "Configuration file not found: $config_file"
+	fi
+
+	log "CONFIG" "Parsing YAML configuration file: $config_file"
+
+	# Parse deployment settings
+	local deployment_verbose=$(awk '/^deployment:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /verbose:/{gsub(/[[:space:]]*verbose:[[:space:]]*/, ""); print}' "$config_file")
+	local deployment_dry_run=$(awk '/^deployment:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /dry_run:/{gsub(/[[:space:]]*dry_run:[[:space:]]*/, ""); print}' "$config_file")
+	local deployment_force=$(awk '/^deployment:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /force:/{gsub(/[[:space:]]*force:[[:space:]]*/, ""); print}' "$config_file")
+	local deployment_log_file=$(awk '/^deployment:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /log_file:/{gsub(/[[:space:]]*log_file:[[:space:]]*["'"'"']?/, ""); gsub(/["'"'"']?[[:space:]]*$/, ""); print}' "$config_file")
+	local deployment_no_cleanup=$(awk '/^deployment:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /no_cleanup:/{gsub(/[[:space:]]*no_cleanup:[[:space:]]*/, ""); print}' "$config_file")
+	local deployment_directory=$(awk '/^deployment:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /directory:/{gsub(/[[:space:]]*directory:[[:space:]]*["'"'"']?/, ""); gsub(/["'"'"']?[[:space:]]*$/, ""); print}' "$config_file")
+
+	# Parse DA layer settings
+	local da_type=$(awk '/^da_layer:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /type:/{gsub(/[[:space:]]*type:[[:space:]]*["'"'"']?/, ""); gsub(/["'"'"']?[[:space:]]*$/, ""); print}' "$config_file")
+	CONFIG_DA_HEADER_NAMESPACE=$(awk '/^da_layer:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /header_namespace:/{gsub(/[[:space:]]*header_namespace:[[:space:]]*["'"'"']?/, ""); gsub(/["'"'"']?[[:space:]]*$/, ""); print}' "$config_file")
+	CONFIG_DA_DATA_NAMESPACE=$(awk '/^da_layer:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /data_namespace:/{gsub(/[[:space:]]*data_namespace:[[:space:]]*["'"'"']?/, ""); gsub(/["'"'"']?[[:space:]]*$/, ""); print}' "$config_file")
+
+	# Parse sequencer settings
+	local sequencer_type=$(awk '/^sequencer:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /type:/{gsub(/[[:space:]]*type:[[:space:]]*["'"'"']?/, ""); gsub(/["'"'"']?[[:space:]]*$/, ""); print}' "$config_file")
+	CONFIG_CHAIN_ID=$(awk '/^sequencer:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /chain_id:/{gsub(/[[:space:]]*chain_id:[[:space:]]*["'"'"']?/, ""); gsub(/["'"'"']?[[:space:]]*$/, ""); print}' "$config_file")
+
+	# Parse genesis addresses (simple array parsing)
+	local genesis_addresses_raw=$(awk '/^sequencer:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /genesis_addresses:/{flag2=1; next} flag2 && /^[[:space:]]*-/{gsub(/^[[:space:]]*-[[:space:]]*["'"'"']?/, ""); gsub(/["'"'"']?[[:space:]]*$/, ""); print}' "$config_file")
+	if [[ -n "$genesis_addresses_raw" ]]; then
+		while IFS= read -r addr; do
+			if [[ -n "$addr" ]]; then
+				CONFIG_GENESIS_ADDRESSES+=("$addr")
+			fi
+		done <<< "$genesis_addresses_raw"
+	fi
+
+	# Parse services settings
+	local services_fullnode=$(awk '/^services:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /fullnode:/{gsub(/[[:space:]]*fullnode:[[:space:]]*/, ""); print}' "$config_file")
+	local services_eth_faucet=$(awk '/^services:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /eth_faucet:/{gsub(/[[:space:]]*eth_faucet:[[:space:]]*/, ""); print}' "$config_file")
+	local services_eth_explorer=$(awk '/^services:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /eth_explorer:/{gsub(/[[:space:]]*eth_explorer:[[:space:]]*/, ""); print}' "$config_file")
+	local services_eth_indexer=$(awk '/^services:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /eth_indexer:/{gsub(/[[:space:]]*eth_indexer:[[:space:]]*/, ""); print}' "$config_file")
+	CONFIG_FAUCET_PRIVATE_KEY=$(awk '/^services:/{flag=1; next} /^[a-zA-Z]/{flag=0} flag && /private_key:/{gsub(/[[:space:]]*private_key:[[:space:]]*["'"'"']?/, ""); gsub(/["'"'"']?[[:space:]]*$/, ""); print}' "$config_file")
+
+	# Apply deployment settings
+	if [[ "$deployment_verbose" == "true" ]]; then
+		VERBOSE=true
+	fi
+	if [[ "$deployment_dry_run" == "true" ]]; then
+		DRY_RUN=true
+	fi
+	if [[ "$deployment_force" == "true" ]]; then
+		FORCE_INSTALL=true
+	fi
+	if [[ -n "$deployment_log_file" && "$deployment_log_file" != '""' ]]; then
+		LOG_FILE="$deployment_log_file"
+	fi
+	if [[ "$deployment_no_cleanup" == "true" ]]; then
+		CLEANUP_ON_EXIT=false
+	fi
+	if [[ -n "$deployment_directory" && "$deployment_directory" != '""' ]]; then
+		DEPLOYMENT_DIR="$deployment_directory"
+	fi
+
+	# Apply DA layer settings
+	case "$da_type" in
+		"da-local")
+			SELECTED_DA="da-local"
+			DEPLOY_DA_LOCAL=true
+			;;
+		"da-celestia")
+			SELECTED_DA="da-celestia"
+			DEPLOY_DA_CELESTIA=true
+			;;
+		*)
+			if [[ -n "$da_type" ]]; then
+				error_exit "Invalid DA layer type in config: $da_type. Must be 'da-local' or 'da-celestia'"
+			fi
+			;;
+	esac
+
+	# Apply sequencer settings
+	case "$sequencer_type" in
+		"single-sequencer")
+			SELECTED_SEQUENCER="single-sequencer"
+			;;
+		*)
+			if [[ -n "$sequencer_type" ]]; then
+				error_exit "Invalid sequencer type in config: $sequencer_type. Must be 'single-sequencer'"
+			fi
+			;;
+	esac
+
+	# Apply services settings
+	if [[ "$services_fullnode" == "true" ]]; then
+		DEPLOY_FULLNODE=true
+	fi
+	if [[ "$services_eth_faucet" == "true" ]]; then
+		DEPLOY_ETH_FAUCET=true
+	fi
+	if [[ "$services_eth_explorer" == "true" ]]; then
+		DEPLOY_ETH_EXPLORER=true
+	fi
+	if [[ "$services_eth_indexer" == "true" ]]; then
+		DEPLOY_ETH_INDEXER=true
+	fi
+
+	# Validate required fields
+	if [[ -z "$SELECTED_DA" ]]; then
+		error_exit "DA layer type is required in configuration file"
+	fi
+	if [[ -z "$SELECTED_SEQUENCER" ]]; then
+		error_exit "Sequencer type is required in configuration file"
+	fi
+	if [[ -z "$CONFIG_CHAIN_ID" ]]; then
+		error_exit "Chain ID is required in configuration file"
+	fi
+	if [[ ${#CONFIG_GENESIS_ADDRESSES[@]} -eq 0 ]]; then
+		error_exit "At least one genesis address is required in configuration file"
+	fi
+	if [[ $DEPLOY_ETH_FAUCET == "true" && -z "$CONFIG_FAUCET_PRIVATE_KEY" ]]; then
+		error_exit "Faucet private key is required when eth_faucet service is enabled"
+	fi
+
+	# Validate genesis addresses
+	for addr in "${CONFIG_GENESIS_ADDRESSES[@]}"; do
+		if ! validate_eth_address "$addr"; then
+			error_exit "Invalid genesis address in config: $addr"
+		fi
+	done
+
+	# Validate faucet private key if provided
+	if [[ -n "$CONFIG_FAUCET_PRIVATE_KEY" ]] && ! validate_private_key "$CONFIG_FAUCET_PRIVATE_KEY"; then
+		error_exit "Invalid faucet private key format in config"
+	fi
+
+	AUTO_MODE=true
+	log "SUCCESS" "Configuration file parsed successfully"
 }
 
 # Parse command line arguments
@@ -1717,6 +1930,18 @@ parse_arguments() {
 		--deployment-dir)
 			DEPLOYMENT_DIR="$2"
 			shift 2
+			;;
+		-c | --config)
+			CONFIG_FILE="$2"
+			shift 2
+			;;
+		--auto)
+			AUTO_MODE=true
+			shift
+			;;
+		--validate-config)
+			VALIDATE_CONFIG_ONLY=true
+			shift
 			;;
 		*)
 			error_exit "Unknown option: $1"
@@ -1831,28 +2056,120 @@ main() {
 		log "INFO" "Logging to: $LOG_FILE"
 	fi
 
-	# Check for existing deployment and warn user
-	check_existing_deployment
+	# Parse YAML configuration if provided
+	if [[ -n "$CONFIG_FILE" ]]; then
+		log "INFO" "Parsing configuration file: $CONFIG_FILE"
+		parse_yaml_config "$CONFIG_FILE"
 
-	# Interactive DA selection (always ask user first)
-	select_da_layer
+		# If only validating configuration, exit after parsing
+		if [[ "$VALIDATE_CONFIG_ONLY" == "true" ]]; then
+			log "INFO" "Configuration validation completed successfully!"
+			log "INFO" "  Stack: ${SELECTED_SEQUENCER:-'not set'}"
+			log "INFO" "  DA Layer: ${SELECTED_DA:-'not set'}"
+			log "INFO" "  Services: Fullnode=${DEPLOY_FULLNODE:-false}, Eth-Faucet=${DEPLOY_ETH_FAUCET:-false}, Eth-Explorer=${DEPLOY_ETH_EXPLORER:-false}, Eth-Indexer=${DEPLOY_ETH_INDEXER:-false}"
+			log "INFO" "  Chain ID: ${CONFIG_CHAIN_ID:-'not set'}"
+			log "INFO" "  Genesis Addresses: ${#CONFIG_GENESIS_ADDRESSES[@]} address(es)"
+			log "INFO" "  DA Header Namespace: ${CONFIG_DA_HEADER_NAMESPACE:-'not set'}"
+			log "INFO" "  DA Data Namespace: ${CONFIG_DA_DATA_NAMESPACE:-'not set'}"
+			log "INFO" "  Faucet Private Key: ${CONFIG_FAUCET_PRIVATE_KEY:+'***set***'}"
+			return
+		fi
 
-	# Interactive sequencer topology selection if not specified
-	if [[ -z $SELECTED_SEQUENCER ]]; then
-		select_sequencer_topology
+		if [[ "$AUTO_MODE" == "true" ]]; then
+			log "INFO" "Running in automated mode"
+
+			# Validate required configuration
+			if [[ -z "$SELECTED_DA" ]] || [[ -z "$SELECTED_SEQUENCER" ]]; then
+				log "ERROR" "Missing required configuration in YAML file"
+				log "ERROR" "Required: deployment.stack, deployment.da_layer"
+				exit 1
+			fi
+
+			log "INFO" "Configuration loaded:"
+			log "INFO" "  Stack: $SELECTED_SEQUENCER"
+			log "INFO" "  DA Layer: $SELECTED_DA"
+			log "INFO" "  Services: Fullnode=$DEPLOY_FULLNODE, Eth-Faucet=$DEPLOY_ETH_FAUCET, Eth-Explorer=$DEPLOY_ETH_EXPLORER, Eth-Indexer=$DEPLOY_ETH_INDEXER"
+
+			# Check for existing deployment and warn user (skip interactive prompt in auto mode)
+			if [[ -d $DEPLOYMENT_DIR ]]; then
+				log "WARN" "Existing deployment directory found: $DEPLOYMENT_DIR"
+				log "WARN" "Automated mode will overwrite existing files"
+			fi
+
+			# Show what will be deployed
+			local deployment_info="$SELECTED_SEQUENCER"
+			if [[ $DEPLOY_FULLNODE == "true" ]]; then
+				deployment_info="$deployment_info + Fullnode"
+			fi
+			if [[ $DEPLOY_ETH_FAUCET == "true" ]]; then
+				deployment_info="$deployment_info + Eth-Faucet"
+			fi
+			if [[ $DEPLOY_ETH_EXPLORER == "true" ]]; then
+				deployment_info="$deployment_info + Eth-Explorer"
+			fi
+			if [[ $DEPLOY_ETH_INDEXER == "true" ]]; then
+				deployment_info="$deployment_info + Eth-Indexer"
+			fi
+			if [[ $DEPLOY_DA_CELESTIA == "true" || $DEPLOY_DA_LOCAL == "true" ]]; then
+				deployment_info="$deployment_info + $SELECTED_DA"
+			fi
+			log "INFO" "Deploying: $deployment_info"
+
+			# Run deployment steps
+			download_deployment_files
+			setup_configuration
+			validate_deployment_files
+			prepare_deployment
+			show_deployment_status
+
+			log "SUCCESS" "Automated deployment completed successfully!"
+
+			# Disable cleanup on successful exit
+			CLEANUP_ON_EXIT=false
+			return
+		fi
 	fi
 
-	# Interactive fullnode selection
-	select_fullnode_deployment
+	# Check for existing deployment and warn user (interactive mode only)
+	check_existing_deployment
 
-	# Interactive eth-faucet selection
-	select_eth_faucet_deployment
+	# Interactive selections (only if not already configured from YAML)
+	if [[ -z "$SELECTED_DA" ]]; then
+		select_da_layer
+	else
+		log "INFO" "Using DA layer from configuration: $SELECTED_DA"
+	fi
 
-	# Interactive eth-explorer selection
-	select_eth_explorer_deployment
+	if [[ -z "$SELECTED_SEQUENCER" ]]; then
+		select_sequencer_topology
+	else
+		log "INFO" "Using sequencer from configuration: $SELECTED_SEQUENCER"
+	fi
 
-	# Interactive eth-indexer selection
-	select_eth_indexer_deployment
+	# Interactive service selections (only if not already configured from YAML)
+	if [[ "$DEPLOY_FULLNODE" != "true" ]]; then
+		select_fullnode_deployment
+	else
+		log "INFO" "Fullnode deployment enabled from configuration"
+	fi
+
+	if [[ "$DEPLOY_ETH_FAUCET" != "true" ]]; then
+		select_eth_faucet_deployment
+	else
+		log "INFO" "Eth-faucet deployment enabled from configuration"
+	fi
+
+	if [[ "$DEPLOY_ETH_EXPLORER" != "true" ]]; then
+		select_eth_explorer_deployment
+	else
+		log "INFO" "Eth-explorer deployment enabled from configuration"
+	fi
+
+	if [[ "$DEPLOY_ETH_INDEXER" != "true" ]]; then
+		select_eth_indexer_deployment
+	else
+		log "INFO" "Eth-indexer deployment enabled from configuration"
+	fi
 
 	# Show what will be deployed
 	local deployment_info="$SELECTED_SEQUENCER"
