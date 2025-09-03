@@ -60,7 +60,7 @@ sequencer:
   # At least one address is required
   # Example: ["0x61F929626841DC9ed2268e62Ef408Bd29d995293"]
   genesis_addresses:
-    - "0x61F929626841DC9ed2268e62Ef408Bd29d995293"
+    - ""
 
 # Additional services configuration
 services:
