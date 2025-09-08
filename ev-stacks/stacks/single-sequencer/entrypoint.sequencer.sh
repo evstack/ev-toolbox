@@ -190,7 +190,7 @@ if [ -n "${DA_AUTH_TOKEN:-}" ]; then
 fi
 
 if [ -n "${DA_HEADER_NAMESPACE:-}" ]; then
-	default_flags="$default_flags --rollkit.da.header_namespace $DA_HEADER_NAMESPACE"
+	default_flags="$default_flags --rollkit.da.namespace $DA_HEADER_NAMESPACE"
 	log "DEBUG" "Added DA header namespace flag: $DA_HEADER_NAMESPACE"
 fi
 

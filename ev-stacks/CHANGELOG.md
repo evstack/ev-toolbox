@@ -5,6 +5,15 @@ All notable changes to the EV-Stacks deployment framework will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-09-08
+
+### Added
+- **Dynamic Celestia Start Height Configuration**: Automatic fetching and setting of start height from latest Celestia block at the time of deployment
+
+### Fixed
+- **DA Namespace Flag**: Corrected flag usage in sequencer and fullnode entrypoints
+  - Changed from `--rollkit.da.header_namespace` back to `--rollkit.da.namespace` for proper compatibility
+
 ## [1.4.2] - 2025-09-08
 
 ### Fixed

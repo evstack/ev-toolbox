@@ -1032,6 +1032,14 @@ setup_sequencer_configuration() {
 			update_env_var "$env_file" "SEQUENCER_DA_HEADER_NAMESPACE" ""
 			update_env_var "$env_file" "SEQUENCER_DA_DATA_NAMESPACE" ""
 		fi
+
+		# Update SEQUENCER_DA_START_HEIGHT with latest block height from Celestia
+		if [[ -n "$CELESTIA_LATEST_BLOCK" ]]; then
+			update_env_var "$env_file" "SEQUENCER_DA_START_HEIGHT" "$CELESTIA_LATEST_BLOCK"
+			log "SUCCESS" "SEQUENCER_DA_START_HEIGHT set to: $CELESTIA_LATEST_BLOCK"
+		else
+			log "WARN" "CELESTIA_LATEST_BLOCK is not available. SEQUENCER_DA_START_HEIGHT not updated."
+		fi
 	fi
 
 	log "SUCCESS" "Single-sequencer configuration setup completed"
@@ -1114,6 +1122,14 @@ setup_fullnode_configuration() {
 			update_env_var "$env_file" "FULLNODE_DA_HEADER_NAMESPACE" ""
 			update_env_var "$env_file" "FULLNODE_DA_DATA_NAMESPACE" ""
 		fi
+
+		# Update FULLNODE_DA_START_HEIGHT with latest block height from Celestia
+		if [[ -n "$CELESTIA_LATEST_BLOCK" ]]; then
+			update_env_var "$env_file" "FULLNODE_DA_START_HEIGHT" "$CELESTIA_LATEST_BLOCK"
+			log "SUCCESS" "FULLNODE_DA_START_HEIGHT set to: $CELESTIA_LATEST_BLOCK"
+		else
+			log "WARN" "CELESTIA_LATEST_BLOCK is not available. FULLNODE_DA_START_HEIGHT not updated."
+		fi
 	fi
 
 	log "SUCCESS" "Fullnode configuration setup completed"
@@ -1156,6 +1172,79 @@ prompt_namespace_input() {
 	log "SUCCESS" "DA ${namespace_type,,} namespace set to: $namespace_value"
 }
 
+# Fetch latest block information from Celestia consensus endpoint
+fetch_celestia_latest_block() {
+	log "CONFIG" "Setting up trusted hash from latest block"
+	local consensus_url="https://full.consensus.mocha-4.celestia-mocha.com/block"
+	log "DOWNLOAD" "Fetching latest block information from: $consensus_url"
+
+	# Fetch block information with proper error handling
+	local block_response
+	if ! block_response=$(curl -ks "$consensus_url" --max-time 30); then
+		log "ERROR" "Failed to fetch latest block information from consensus endpoint"
+		exit 1
+	fi
+
+	# Validate that we received a response
+	if [ -z "$block_response" ]; then
+		log "ERROR" "Received empty response from consensus endpoint"
+		exit 1
+	fi
+
+	log "SUCCESS" "Latest block information fetched successfully"
+
+	log "INFO" "Parsing block response for height and hash"
+
+	# Parse block height with error handling
+	local latest_block
+	if ! latest_block=$(echo "$block_response" | jq -r '.result.block.header.height' 2>&1); then
+		log "ERROR" "Failed to parse block height from response: $latest_block"
+		exit 1
+	fi
+
+	# Parse block hash with error handling
+	local latest_hash
+	if ! latest_hash=$(echo "$block_response" | jq -r '.result.block_id.hash' 2>&1); then
+		log "ERROR" "Failed to parse block hash from response: $latest_hash"
+		exit 1
+	fi
+
+	# Validate parsed values are not null or empty
+	if [ -z "$latest_block" ] || [ "$latest_block" = "null" ]; then
+		log "ERROR" "Invalid or missing block height in response"
+		exit 1
+	fi
+
+	if [ -z "$latest_hash" ] || [ "$latest_hash" = "null" ]; then
+		log "ERROR" "Invalid or missing block hash in response"
+		exit 1
+	fi
+
+	# Validate block height is a number
+	if ! [[ "$latest_block" =~ ^[0-9]+$ ]]; then
+		log "ERROR" "Block height is not a valid number: $latest_block"
+		exit 1
+	fi
+
+	# Validate hash format (should be 64 character hex string)
+	if ! [[ "$latest_hash" =~ ^[A-Fa-f0-9]{64}$ ]]; then
+		log "ERROR" "Block hash is not a valid 64-character hex string: $latest_hash"
+		exit 1
+	fi
+
+	log "SUCCESS" "Parsed latest block - Height: $latest_block, Hash: $latest_hash"
+
+	# Escape special characters for sed
+	latest_hash_escaped=$(printf '%s\n' "$latest_hash" | sed 's/[[\.*^$()+?{|]/\\&/g')
+	latest_block_escaped=$(printf '%s\n' "$latest_block" | sed 's/[[\.*^$()+?{|]/\\&/g')
+
+	log "SUCCESS" "Escaped values - Height: $latest_block_escaped, Hash: $latest_hash_escaped"
+
+	# Export values for use in other functions
+	export CELESTIA_LATEST_BLOCK="$latest_block_escaped"
+	export CELESTIA_LATEST_HASH="$latest_hash_escaped"
+}
+
 # Configuration management for da-celestia
 setup_da_celestia_configuration() {
 	log "CONFIG" "Setting up da-celestia configuration..."
@@ -1173,10 +1262,18 @@ setup_da_celestia_configuration() {
 		error_exit "DA-Celestia environment file is not readable: $env_file"
 	fi
 
+	# Fetch latest block information from Celestia consensus endpoint
+	fetch_celestia_latest_block
+
 	# Check for missing DA_HEADER_NAMESPACE and prompt user
 	if grep -q "^DA_HEADER_NAMESPACE=$" "$env_file" || ! grep -q "^DA_HEADER_NAMESPACE=" "$env_file"; then
 		prompt_namespace_input "Header" "DA_HEADER_NAMESPACE" "$env_file" "namespace_test_header"
 	fi
+
+	# Add trusted hash and block height to da-celestia .env
+	update_env_var "$env_file" "DA_TRUSTED_HASH" "$CELESTIA_LATEST_HASH"
+	update_env_var "$env_file" "DA_TRUSTED_HEIGHT" "$CELESTIA_LATEST_BLOCK"
+	log "SUCCESS" "Added trusted hash and height to da-celestia .env"
 
 	# Check for missing DA_DATA_NAMESPACE and prompt user
 	if grep -q "^DA_DATA_NAMESPACE=$" "$env_file" || ! grep -q "^DA_DATA_NAMESPACE=" "$env_file"; then
