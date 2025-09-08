@@ -40,12 +40,58 @@ if [ ! -f "$LIGHT_NODE_CONFIG_PATH" ]; then
     log "CONFIG" "Setting up trusted hash from latest block"
     consensus_url="https://full.consensus.mocha-4.celestia-mocha.com/block"
     log "DOWNLOAD" "Fetching latest block information from: $consensus_url"
-    block_response=$(curl -ks "$consensus_url" --max-time 30)
+
+    # Fetch block information with proper error handling
+    if ! block_response=$(curl -ks "$consensus_url" --max-time 30); then
+        log "ERROR" "Failed to fetch latest block information from consensus endpoint"
+        exit 1
+    fi
+
+    # Validate that we received a response
+    if [ -z "$block_response" ]; then
+        log "ERROR" "Received empty response from consensus endpoint"
+        exit 1
+    fi
+
     log "SUCCESS" "Latest block information fetched successfully"
 
     log "INFO" "Parsing block response for height and hash"
-    latest_block=$(echo "$block_response" | jq -r '.result.block.header.height' 2>/dev/null);
-    latest_hash=$(echo "$block_response" | jq -r '.result.block_id.hash' 2>/dev/null)
+
+    # Parse block height with error handling
+    if ! latest_block=$(echo "$block_response" | jq -r '.result.block.header.height' 2>&1); then
+        log "ERROR" "Failed to parse block height from response: $latest_block"
+        exit 1
+    fi
+
+    # Parse block hash with error handling
+    if ! latest_hash=$(echo "$block_response" | jq -r '.result.block_id.hash' 2>&1); then
+        log "ERROR" "Failed to parse block hash from response: $latest_hash"
+        exit 1
+    fi
+
+    # Validate parsed values are not null or empty
+    if [ -z "$latest_block" ] || [ "$latest_block" = "null" ]; then
+        log "ERROR" "Invalid or missing block height in response"
+        exit 1
+    fi
+
+    if [ -z "$latest_hash" ] || [ "$latest_hash" = "null" ]; then
+        log "ERROR" "Invalid or missing block hash in response"
+        exit 1
+    fi
+
+    # Validate block height is a number
+    if ! [[ "$latest_block" =~ ^[0-9]+$ ]]; then
+        log "ERROR" "Block height is not a valid number: $latest_block"
+        exit 1
+    fi
+
+    # Validate hash format (should be 64 character hex string)
+    if ! [[ "$latest_hash" =~ ^[A-Fa-f0-9]{64}$ ]]; then
+        log "ERROR" "Block hash is not a valid 64-character hex string: $latest_hash"
+        exit 1
+    fi
+
     log "SUCCESS" "Parsed latest block - Height: $latest_block, Hash: $latest_hash"
 
     log "CONFIG" "Updating configuration with latest trusted state"
