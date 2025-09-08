@@ -7,11 +7,12 @@
 set -euo pipefail
 
 # Script metadata
-readonly SCRIPT_VERSION="1.4.0"
+readonly SCRIPT_VERSION="1.4.2"
 readonly SCRIPT_NAME="deploy-evolve"
 readonly REPO_URL="https://github.com/evstack/ev-toolbox"
 readonly GITHUB_RAW_BASE="https://raw.githubusercontent.com/evstack/ev-toolbox"
-readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/main/ev-stacks"
+# readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/main/ev-stacks"
+readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/claude/da-fix/ev-stacks"
 readonly DEPLOYMENT_DIR="$HOME/evolve-deployment"
 
 # File and directory constants
@@ -556,7 +557,7 @@ download_fullnode_files() {
 	done
 
 	# Make entrypoint scripts executable
-	chmod +x entrypoint.fullnode.sh || error_exit "Failed to make fullnode entrypoint script executable"
+	chmod +x entrypoint.fullnode.sh entrypoint.ev-reth.sh || error_exit "Failed to make fullnode entrypoint script executable"
 
 	log "SUCCESS" "Fullnode deployment files downloaded successfully"
 }
@@ -1421,23 +1422,6 @@ setup_configuration() {
 	log "SUCCESS" "All configuration setup completed"
 }
 
-# Create shared volume for DA auth token
-create_shared_volume() {
-	if [[ $DEPLOY_DA_CELESTIA == "true" ]]; then
-		log "CONFIG" "Creating shared volume for DA auth token..."
-
-		# Create the celestia-node-export volume if it doesn't exist
-		if ! docker volume inspect "$SHARED_VOLUME_NAME" >/dev/null 2>&1; then
-			if ! docker volume create "$SHARED_VOLUME_NAME"; then
-				error_exit "Failed to create shared volume $SHARED_VOLUME_NAME"
-			fi
-			log "SUCCESS" "Created shared volume: $SHARED_VOLUME_NAME"
-		else
-			log "INFO" "Shared volume $SHARED_VOLUME_NAME already exists"
-		fi
-	fi
-}
-
 # Deployment preparation
 prepare_deployment() {
 	log "DEPLOY" "Preparing deployment files..."
@@ -1446,9 +1430,6 @@ prepare_deployment() {
 		log "INFO" "DRY RUN: Deployment files prepared. Ready to run services"
 		return 0
 	fi
-
-	# Create shared volume for DA integration
-	create_shared_volume
 
 	log "SUCCESS" "Deployment files prepared successfully"
 }

@@ -5,6 +5,19 @@ All notable changes to the EV-Stacks deployment framework will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.2] - 2025-09-08
+
+### Fixed
+- **Fullnode deployment script**: `entrypoint.ev-reth.sh` is now properly deployed and made executable
+- **Celestia DA initialization**: Improved trusted state management with dynamic latest block fetching during initial setup only
+
+### Changed
+- **Dependencies**:
+  - da-celestia: Use `ghcr.io/celestiaorg/celestia-app` instead of `ghcr.io/celestiaorg/celestia-app-standalone`
+
+### Improved
+- **Deployment script**: Removed unnecessary shared volume creation logic for cleaner deployment process
+
 ## [1.4.1] - 2025-09-02
 
 ### Fixed

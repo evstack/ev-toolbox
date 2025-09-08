@@ -14,10 +14,6 @@ set -u
 LIGHT_NODE_CONFIG_PATH=/home/celestia/config.toml
 TOKEN_PATH=${VOLUME_EXPORT_PATH}/auth_token
 
-# Configure trusted height and hash with defaults
-DA_TRUSTED_HEIGHT=${DA_TRUSTED_HEIGHT:-6850000}
-DA_TRUSTED_HASH=${DA_TRUSTED_HASH:-E6D437C5F411B3E6388BA2A3D84F958EC2B05CBE815F33B412A4DF9157EFCE37}
-
 log "INIT" "Starting Celestia Light Node initialization"
 log "INFO" "Light node config path: $LIGHT_NODE_CONFIG_PATH"
 log "INFO" "Token export path: $TOKEN_PATH"
@@ -25,8 +21,6 @@ log "INFO" "DA Core IP: ${DA_CORE_IP}"
 log "INFO" "DA Core Port: ${DA_CORE_PORT}"
 log "INFO" "DA Network: ${DA_NETWORK}"
 log "INFO" "DA RPC Port: ${DA_RPC_PORT}"
-log "INFO" "Default trusted height: $DA_TRUSTED_HEIGHT"
-log "INFO" "Default trusted hash: $DA_TRUSTED_HASH"
 
 # Initializing the light node
 if [ ! -f "$LIGHT_NODE_CONFIG_PATH" ]; then
@@ -41,40 +35,19 @@ if [ ! -f "$LIGHT_NODE_CONFIG_PATH" ]; then
         exit 1
     fi
     log "SUCCESS" "Celestia light node initialization completed"
-else
-    log "INFO" "Config file already exists at $LIGHT_NODE_CONFIG_PATH"
-    log "INFO" "Skipping initialization - light node already configured"
-fi
 
-# Get latest block and update trusted hash
-log "CONFIG" "Setting up trusted hash from latest block"
-consensus_url="https://full.consensus.mocha-4.celestia-mocha.com/block"
-log "DOWNLOAD" "Fetching latest block information from: $consensus_url"
-
-if ! block_response=$(curl -s "$consensus_url" --max-time 30); then
-    log "ERROR" "Failed to fetch latest block information from consensus endpoint"
-    log "WARNING" "Falling back to default trusted values"
-    latest_block=$DA_TRUSTED_HEIGHT
-    latest_hash=$DA_TRUSTED_HASH
-else
+    # Get latest block and update trusted hash
+    log "CONFIG" "Setting up trusted hash from latest block"
+    consensus_url="https://full.consensus.mocha-4.celestia-mocha.com/block"
+    log "DOWNLOAD" "Fetching latest block information from: $consensus_url"
+    block_response=$(curl -ks "$consensus_url" --max-time 30)
     log "SUCCESS" "Latest block information fetched successfully"
 
     log "INFO" "Parsing block response for height and hash"
-    if ! latest_block=$(echo "$block_response" | jq -r '.result.block.header.height' 2>/dev/null); then
-        log "ERROR" "Failed to parse block height from response"
-        latest_block=$DA_TRUSTED_HEIGHT
-    fi
-
-    if ! latest_hash=$(echo "$block_response" | jq -r '.result.block_id.hash' 2>/dev/null); then
-        log "ERROR" "Failed to parse block hash from response"
-        latest_hash=$DA_TRUSTED_HASH
-    fi
-
+    latest_block=$(echo "$block_response" | jq -r '.result.block.header.height' 2>/dev/null);
+    latest_hash=$(echo "$block_response" | jq -r '.result.block_id.hash' 2>/dev/null)
     log "SUCCESS" "Parsed latest block - Height: $latest_block, Hash: $latest_hash"
-fi
 
-# Update config with trusted hash
-if [ -f "$LIGHT_NODE_CONFIG_PATH" ]; then
     log "CONFIG" "Updating configuration with latest trusted state"
 
     # Escape special characters for sed
@@ -89,29 +62,32 @@ if [ -f "$LIGHT_NODE_CONFIG_PATH" ]; then
         exit 1
     fi
     log "SUCCESS" "Config updated with latest trusted state"
+
+    # Update DASer.SampleFrom
+    log "CONFIG" "Updating DASer.SampleFrom to: $latest_block"
+    if ! sed -i 's/^[[:space:]]*SampleFrom = .*/  SampleFrom = '$latest_block'/' "$LIGHT_NODE_CONFIG_PATH"; then
+        log "ERROR" "Failed to update DASer.SampleFrom"
+        exit 1
+    fi
+    log "SUCCESS" "DASer.SampleFrom updated successfully"
+
+    # Update Header.TrustedHash
+    log "CONFIG" "Updating Header.TrustedHash to: $latest_hash"
+    # Escape special characters for sed
+    latest_hash_ESCAPED=$(printf '%s\n' "$latest_hash" | sed 's/[[\.*^$()+?{|]/\\&/g')
+    if ! sed -i 's/^[[:space:]]*TrustedHash = .*/  TrustedHash = "'"$latest_hash_ESCAPED"'"/' "$LIGHT_NODE_CONFIG_PATH"; then
+        log "ERROR" "Failed to update Header.TrustedHash"
+        exit 1
+    fi
+    log "SUCCESS" "Header.TrustedHash updated successfully"
+
+    log "SUCCESS" "Configuration completed - Trusted height: $latest_block, Trusted hash: $latest_hash"
+
+
 else
-    log "WARNING" "Config file not found, cannot update trusted state"
+    log "INFO" "Config file already exists at $LIGHT_NODE_CONFIG_PATH"
+    log "INFO" "Skipping initialization - light node already configured"
 fi
-
-# Update DASer.SampleFrom
-log "CONFIG" "Updating DASer.SampleFrom to: ${DA_TRUSTED_HEIGHT}"
-if ! sed -i 's/^[[:space:]]*SampleFrom = .*/  SampleFrom = '${DA_TRUSTED_HEIGHT}'/' "$LIGHT_NODE_CONFIG_PATH"; then
-    log "ERROR" "Failed to update DASer.SampleFrom"
-    exit 1
-fi
-log "SUCCESS" "DASer.SampleFrom updated successfully"
-
-# Update Header.TrustedHash
-log "CONFIG" "Updating Header.TrustedHash to: ${DA_TRUSTED_HASH}"
-# Escape special characters for sed
-DA_TRUSTED_HASH_ESCAPED=$(printf '%s\n' "$DA_TRUSTED_HASH" | sed 's/[[\.*^$()+?{|]/\\&/g')
-if ! sed -i 's/^[[:space:]]*TrustedHash = .*/  TrustedHash = "'"$DA_TRUSTED_HASH_ESCAPED"'"/' "$LIGHT_NODE_CONFIG_PATH"; then
-    log "ERROR" "Failed to update Header.TrustedHash"
-    exit 1
-fi
-log "SUCCESS" "Header.TrustedHash updated successfully"
-
-log "SUCCESS" "Configuration completed - Trusted height: ${DA_TRUSTED_HEIGHT}, Trusted hash: ${DA_TRUSTED_HASH}"
 
 # Export AUTH_TOKEN to shared volume
 log "AUTH" "Generating and exporting auth token to: $TOKEN_PATH"
