@@ -7,12 +7,11 @@
 set -euo pipefail
 
 # Script metadata
-readonly SCRIPT_VERSION="1.4.2"
+readonly SCRIPT_VERSION="1.5.0"
 readonly SCRIPT_NAME="deploy-evolve"
 readonly REPO_URL="https://github.com/evstack/ev-toolbox"
 readonly GITHUB_RAW_BASE="https://raw.githubusercontent.com/evstack/ev-toolbox"
-# readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/main/ev-stacks"
-readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/claude/da-height/ev-stacks"
+readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/main/ev-stacks"
 readonly DEPLOYMENT_DIR="$HOME/evolve-deployment"
 
 # File and directory constants
