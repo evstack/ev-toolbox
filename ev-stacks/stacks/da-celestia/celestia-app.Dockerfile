@@ -1,4 +1,4 @@
-FROM ghcr.io/celestiaorg/celestia-app:${CELESTIA_APPD_TAG}
+FROM ghcr.io/celestiaorg/celestia-app:v5.0.2-mocha
 
 USER root
 
