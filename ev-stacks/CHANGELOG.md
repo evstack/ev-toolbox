@@ -5,6 +5,12 @@ All notable changes to the EV-Stacks deployment framework will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2025-09-12
+
+### Changed
+- **Ev-reth Flag**: More performance on ev-reth
+  - Added launch argument `--engine.always-process-payload-attributes-on-canonical-head`
+
 ## [1.5.0] - 2025-09-08
 
 ### Added
