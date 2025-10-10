@@ -82,10 +82,10 @@ services:
       - ../../lib/logging.sh:/usr/local/lib/logging.sh:ro
     command:
       - start
-      - --rollkit.rpc.address=0.0.0.0:7331
-      - --rollkit.p2p.listen_address=/ip4/0.0.0.0/tcp/7676
-      - --rollkit.instrumentation.prometheus
-      - --rollkit.instrumentation.prometheus_listen_addr=:26660
+      - --evnode.rpc.address=0.0.0.0:7331
+      - --evnode.p2p.listen_address=/ip4/0.0.0.0/tcp/7676
+      - --evnode.instrumentation.prometheus
+      - --evnode.instrumentation.prometheus_listen_addr=:26660
     environment:
       - EVM_ENGINE_URL=http://ev-reth-fullnode:8551
       - EVM_ETH_URL=http://ev-reth-fullnode:8545

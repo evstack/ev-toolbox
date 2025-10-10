@@ -5,6 +5,19 @@ All notable changes to the EV-Stacks deployment framework will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2025-10-10
+
+### Changed
+- **Dependencies**:
+  - Upgraded ghcr.io/celestiaorg/celestia-node to `v0.27.5-mocha`
+  - Upgraded ghcr.io/celestiaorg/celestia-app-standalone to `v6.0.5-mocha`
+  - Renamed Evm-single `--rollkit` flags
+  - Evm-single app does not support evolve.da.start_height anymore
+
+### Fixed
+- **Shell syntax**: Fixed the "bad substitution" on macOS
+- **Shell syntax**: Fixed the itrocket URLs for celestia-app snapshots
+
 ## [1.6.0] - 2025-09-12
 
 ### Changed
@@ -18,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **DA Namespace Flag**: Corrected flag usage in sequencer and fullnode entrypoints
-  - Changed from `--rollkit.da.header_namespace` back to `--rollkit.da.namespace` for proper compatibility
+  - Changed from `--evnode.da.header_namespace` back to `--evnode.da.namespace` for proper compatibility
 
 ## [1.4.2] - 2025-09-08
 
@@ -124,7 +137,7 @@ Users upgrading from version 1.1.0 can:
   - Old format: `000000000000000000000000000000000000002737d4d967c7ca526dd5`
   - New format: `namespace_test_header` or `namespace_test_data`
 - Updated Rollkit flags to use new namespace parameters:
-  - `--rollkit.da.namespace` → `--rollkit.da.header_namespace` and `--rollkit.da.data_namespace`
+  - `--evnode.da.namespace` → `--evnode.da.header_namespace` and `--evnode.da.data_namespace`
 - Component naming updates to reflect current project names:
   - Rollkit → Ev-node (consensus layer)
   - Lumen → Ev-reth (execution layer)

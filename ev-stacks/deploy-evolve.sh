@@ -3,11 +3,10 @@
 # Evolve One-Liner Deployment Script
 # This script provides a complete deployment framework for Evolve sequencer nodes and Celestia DA
 # Usage: bash -c "bash -i <(curl -s https://raw.githubusercontent.com/evstack/ev-toolbox/refs/heads/main/ev-stacks/deploy-evolve.sh)"
-
 set -euo pipefail
 
 # Script metadata
-readonly SCRIPT_VERSION="1.6.0"
+readonly SCRIPT_VERSION="1.7.0"
 readonly SCRIPT_NAME="deploy-evolve"
 readonly REPO_URL="https://github.com/evstack/ev-toolbox"
 readonly GITHUB_RAW_BASE="https://raw.githubusercontent.com/evstack/ev-toolbox"
@@ -1142,13 +1141,15 @@ prompt_namespace_input() {
 	local env_file="$3"
 	local example_value="$4"
 
+	local namespace_type_lower=$(echo "$namespace_type" | tr '[:upper:]' '[:lower:]')
+
 	echo ""
 	echo "🌌 $namespace_type namespace is required for Celestia data availability."
-	echo "This should be an encoded string identifier used to categorize and retrieve ${namespace_type,,} blobs."
+	echo "This should be an encoded string identifier used to categorize and retrieve ${namespace_type_lower} blobs."
 	echo "Example: '$example_value'"
 
 	while true; do
-		echo -n "Please enter the ${namespace_type,,} namespace: "
+		echo -n "Please enter the ${namespace_type_lower} namespace: "
 		read -r namespace_value
 
 		# Validate namespace format
@@ -1159,7 +1160,7 @@ prompt_namespace_input() {
 
 		# Check if it's a valid encoded string
 		if [[ $namespace_value =~ ^[a-zA-Z0-9_-]+$ ]]; then
-			echo "✅ Valid ${namespace_type,,} namespace format."
+			echo "✅ Valid ${namespace_type_lower} namespace format."
 			break
 		else
 			echo "❌ Error: Namespace must be an encoded string with alphanumeric characters, underscores, and hyphens."
@@ -1169,7 +1170,7 @@ prompt_namespace_input() {
 
 	# Update namespace in .env file
 	update_env_var "$env_file" "$env_var_name" "$namespace_value"
-	log "SUCCESS" "DA ${namespace_type,,} namespace set to: $namespace_value"
+	log "SUCCESS" "DA ${namespace_type_lower} namespace set to: $namespace_value"
 }
 
 # Fetch latest block information from Celestia consensus endpoint

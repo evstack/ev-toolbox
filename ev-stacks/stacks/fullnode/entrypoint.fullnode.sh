@@ -40,7 +40,7 @@ get_home_dir() {
 
 # Get the home directory (either from --home flag or default)
 CONFIG_HOME=$(get_home_dir "$@")
-log "INFO" "Using config home directory: $CONFIG_HOME"
+log "INFO" "Using config home directory: ${CONFIG_HOME}"
 
 if [ ! -f "${CONFIG_HOME}/config/node_key.json" ]; then
 	log "INFO" "Node key not found. Initializing new fullnode configuration"
@@ -57,8 +57,10 @@ else
 fi
 
 # Importing genesis
-cp -pr /volumes/sequencer_export/genesis.json "${CONFIG_HOME}/config/genesis.json"
-log "SUCCESS" "genesis.json copied to: ${CONFIG_HOME}/config/genesis.json"
+if [ -n "${DA_START_HEIGHT:-}" ] && [ ! -f "${CONFIG_HOME}/config/genesis.json" ]; then
+	sed "\$s/}\$/,\"da_start_height\":${FULLNODE_DA_START_HEIGHT}}/" /volumes/sequencer_export/genesis.json > "${CONFIG_HOME}/config/genesis.json"
+	log "SUCCESS" "genesis.json copied to: ${CONFIG_HOME}/config/genesis.json"
+fi
 
 # Importing DA auth token
 log "INFO" "Checking for DA authentication token"
@@ -187,35 +189,30 @@ fi
 
 log "INFO" "Configuring Data Availability (DA) settings"
 if [ -n "${SEQUENCER_P2P_INFO:-}" ]; then
-	default_flags="${default_flags} --rollkit.p2p.peers ${SEQUENCER_P2P_INFO}"
+	default_flags="${default_flags} --evnode.p2p.peers ${SEQUENCER_P2P_INFO}"
 	log "DEBUG" "Added p2p peer flag: ${SEQUENCER_P2P_INFO}"
 fi
 
 # Conditionally add DA-related flags
 log "INFO" "Configuring Data Availability (DA) settings"
 if [ -n "${DA_ADDRESS:-}" ]; then
-	default_flags="${default_flags} --rollkit.da.address ${DA_ADDRESS}"
+	default_flags="${default_flags} --evnode.da.address ${DA_ADDRESS}"
 	log "DEBUG" "Added DA address flag: ${DA_ADDRESS}"
 fi
 
 if [ -n "${DA_AUTH_TOKEN:-}" ]; then
-	default_flags="${default_flags} --rollkit.da.auth_token ${DA_AUTH_TOKEN}"
+	default_flags="${default_flags} --evnode.da.auth_token ${DA_AUTH_TOKEN}"
 	log "DEBUG" "Added DA auth token flag"
 fi
 
 if [ -n "${DA_DATA_NAMESPACE:-}" ]; then
-	default_flags="${default_flags} --rollkit.da.data_namespace ${DA_DATA_NAMESPACE}"
+	default_flags="${default_flags} --evnode.da.data_namespace ${DA_DATA_NAMESPACE}"
 	log "DEBUG" "Added DA data namespace flag: ${DA_DATA_NAMESPACE}"
 fi
 
 if [ -n "${DA_HEADER_NAMESPACE:-}" ]; then
-	default_flags="${default_flags} --rollkit.da.namespace ${DA_HEADER_NAMESPACE}"
+	default_flags="${default_flags} --evnode.da.namespace ${DA_HEADER_NAMESPACE}"
 	log "DEBUG" "Added DA header namespace flag: ${DA_HEADER_NAMESPACE}"
-fi
-
-if [ -n "${DA_START_HEIGHT:-}" ]; then
-	default_flags="${default_flags} --rollkit.da.start_height ${DA_START_HEIGHT}"
-	log "DEBUG" "Added DA start height flag: ${DA_START_HEIGHT}"
 fi
 
 default_flags="${default_flags} --home=${CONFIG_HOME}"

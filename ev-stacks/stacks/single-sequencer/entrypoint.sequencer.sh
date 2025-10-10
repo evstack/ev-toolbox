@@ -50,7 +50,7 @@ if [ ! -f "$CONFIG_HOME/config/node_key.json" ]; then
 
 	# Add required flags if environment variables are set
 	if [ -n "${EVM_SIGNER_PASSPHRASE:-}" ]; then
-		init_flags="$init_flags --rollkit.node.aggregator=true --rollkit.signer.passphrase $EVM_SIGNER_PASSPHRASE"
+		init_flags="$init_flags --evnode.node.aggregator=true --evnode.signer.passphrase $EVM_SIGNER_PASSPHRASE"
 		log "DEBUG" "EVM_SIGNER_PASSPHRASE is set, enabling aggregator mode"
 	fi
 
@@ -168,40 +168,35 @@ if [ -n "${EVM_ETH_URL:-}" ]; then
 fi
 
 if [ -n "${EVM_BLOCK_TIME:-}" ]; then
-	default_flags="$default_flags --rollkit.node.block_time $EVM_BLOCK_TIME"
+	default_flags="$default_flags --evnode.node.block_time $EVM_BLOCK_TIME"
 	log "DEBUG" "Added block time flag: $EVM_BLOCK_TIME"
 fi
 
 if [ -n "${EVM_SIGNER_PASSPHRASE:-}" ]; then
-	default_flags="$default_flags --rollkit.node.aggregator=true --rollkit.signer.passphrase $EVM_SIGNER_PASSPHRASE"
+	default_flags="$default_flags --evnode.node.aggregator=true --evnode.signer.passphrase $EVM_SIGNER_PASSPHRASE"
 	log "DEBUG" "Added aggregator and signer passphrase flags"
 fi
 
 # Conditionally add DA-related flags
 log "INFO" "Configuring Data Availability (DA) settings"
 if [ -n "${DA_ADDRESS:-}" ]; then
-	default_flags="$default_flags --rollkit.da.address $DA_ADDRESS"
+	default_flags="$default_flags --evnode.da.address $DA_ADDRESS"
 	log "DEBUG" "Added DA address flag: $DA_ADDRESS"
 fi
 
 if [ -n "${DA_AUTH_TOKEN:-}" ]; then
-	default_flags="$default_flags --rollkit.da.auth_token $DA_AUTH_TOKEN"
+	default_flags="$default_flags --evnode.da.auth_token $DA_AUTH_TOKEN"
 	log "DEBUG" "Added DA auth token flag"
 fi
 
 if [ -n "${DA_HEADER_NAMESPACE:-}" ]; then
-	default_flags="$default_flags --rollkit.da.namespace $DA_HEADER_NAMESPACE"
+	default_flags="$default_flags --evnode.da.namespace $DA_HEADER_NAMESPACE"
 	log "DEBUG" "Added DA header namespace flag: $DA_HEADER_NAMESPACE"
 fi
 
 if [ -n "${DA_DATA_NAMESPACE:-}" ]; then
-	default_flags="$default_flags --rollkit.da.data_namespace $DA_DATA_NAMESPACE"
+	default_flags="$default_flags --evnode.da.data_namespace $DA_DATA_NAMESPACE"
 	log "DEBUG" "Added DA data namespace flag: $DA_DATA_NAMESPACE"
-fi
-
-if [ -n "${DA_START_HEIGHT:-}" ]; then
-	default_flags="$default_flags --rollkit.da.start_height $DA_START_HEIGHT"
-	log "DEBUG" "Added DA start height flag: $DA_START_HEIGHT"
 fi
 
 default_flags="${default_flags} --home=${CONFIG_HOME}"
