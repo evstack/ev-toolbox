@@ -104,6 +104,10 @@ services:
     environment:
       HOSTNAME: 0.0.0.0
 
+      # Disable ads
+      NEXT_PUBLIC_AD_BANNER_PROVIDER: none
+      NEXT_PUBLIC_AD_TEXT_PROVIDER: none
+
       # API options
       NEXT_PUBLIC_API_HOST: ${EXPLORER_BACKEND_HOST}
       NEXT_PUBLIC_API_PORT: 4000
