@@ -411,15 +411,21 @@ The script automatically configures:
 
 #### Celestia DA Stack
 
-1. **da-permission-fix**: Fixes file permissions for shared volumes
-2. **celestia-app**: Celestia consensus node (connects to mocha-4 network)
+1. **init-1-permission**: Fixes file permissions for shared volumes
+2. **init-2-appd**: Fixes file permissions for shared volumes
    - **Entrypoint automation**:
      - Initializes celestia-appd with proper moniker and chain-id
-     - Downloads genesis file for the specified network (mocha-4)
+     - Fetches and configures address book
+     - Downloads and extracts latest network snapshot for quick sync
+     - Configures gRPC server to be accessible externally (0.0.0.0:9090)
+3. **init-3-snapshot**: Downloads and extracts latest network snapshot for quick sync
+4. **celestia-app**: Celestia consensus node (connects to mocha-4 network)
+   - **Entrypoint automation**:
+     - Initializes celestia-appd with proper moniker and chain-id
      - Fetches and configures network seeds
      - Downloads and extracts latest network snapshot for quick sync
      - Configures gRPC server to be accessible externally (0.0.0.0:9090)
-3. **celestia-node**: Celestia light node (provides DA services)
+5. **celestia-node**: Celestia light node (provides DA services)
    - **Entrypoint automation**:
      - Initializes light node with core IP and network configuration
      - Configures node to synchronize from a specific block instead of genesis block (default values can be overriden by environment variables `DA_TRUSTED_HEIGHT` and `DA_TRUSTED_HASH`)

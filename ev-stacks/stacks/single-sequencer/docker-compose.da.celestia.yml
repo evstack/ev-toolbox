@@ -19,7 +19,7 @@ services:
 
   ev-reth-sequencer:
     container_name: ev-reth-sequencer
-    image: ghcr.io/evstack/ev-reth:latest
+    image: ghcr.io/evstack/ev-reth:v0.1.0
     depends_on:
       jwt-init-sequencer:
         condition: service_completed_successfully
@@ -61,7 +61,7 @@ services:
 
   single-sequencer:
     container_name: single-sequencer
-    image: ghcr.io/evstack/ev-node-evm-single:main
+    image: ghcr.io/evstack/ev-node-evm-single:v1.0.0-beta.8
     env_file: .env
     ports:
       - $SEQUENCER_EV_NODE_PROMETHEUS_PORT:26660
@@ -92,7 +92,6 @@ services:
       - DA_ADDRESS=http://celestia-node:26658
       - DA_HEADER_NAMESPACE=${SEQUENCER_DA_HEADER_NAMESPACE}
       - DA_DATA_NAMESPACE=${SEQUENCER_DA_DATA_NAMESPACE}
-      - DA_AUTH_TOKEN_PATH=/volumes/da_export/auth_token
     networks:
       - evstack_shared
 
