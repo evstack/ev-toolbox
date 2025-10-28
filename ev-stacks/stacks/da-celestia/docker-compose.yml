@@ -44,7 +44,7 @@ services:
       - celestia-appd-data:/home/celestia/.celestia-app
     environment:
       - VOLUME_EXPORT_PATH=/volumes/da_export
-    entrypoint: [/bin/bash, /entrypoint.sh]
+    command: [start]
     healthcheck:
       test: ["CMD", "celestia-appd", "status"]
       interval: 30s
