@@ -15,7 +15,6 @@ LIGHT_NODE_CONFIG_PATH=/home/celestia/config.toml
 
 log "INIT" "Starting Celestia Light Node initialization"
 log "INFO" "Light node config path: $LIGHT_NODE_CONFIG_PATH"
-log "INFO" "Token export path: $TOKEN_PATH"
 log "INFO" "DA Core IP: ${DA_CORE_IP}"
 log "INFO" "DA Core Port: ${DA_CORE_PORT}"
 log "INFO" "DA Network: ${DA_NETWORK}"

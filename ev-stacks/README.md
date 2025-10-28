@@ -41,21 +41,6 @@ Before deploying EV-Stacks, ensure your system meets the following requirements:
 
 If deploying with Celestia as the Data Availability layer, additional configuration is required:
 
-- **BBR Congestion Control**: Must be enabled on the server for optimal Celestia network performance
-
-  ```bash
-  # Check if BBR is available
-  sysctl net.ipv4.tcp_available_congestion_control
-
-  # Enable BBR (requires root privileges)
-  echo 'net.core.default_qdisc=fq' | sudo tee -a /etc/sysctl.conf
-  echo 'net.ipv4.tcp_congestion_control=bbr' | sudo tee -a /etc/sysctl.conf
-  sudo sysctl -p
-
-  # Verify BBR is active
-  sysctl net.ipv4.tcp_congestion_control
-  ```
-
 - **TIA Tokens**: You'll need testnet mocha-4 TIA tokens to fund your Celestia light node
   - Get testnet tokens from the [Celestia Discord faucet](https://discord.gg/celestiacommunity) or the [Celenium web faucet](https://mocha.celenium.io/faucet)
   - The deployment will show you the address to fund after setup
@@ -394,7 +379,6 @@ The script automatically configures:
   - `reth-sequencer-data`: Blockchain state and transaction data
   - `sequencer-data`: Ev-node configuration and keys
   - `celestia-node-data`: Celestia light node data
-  - `celestia-node-export`: Shared authentication tokens
 
 ### 3. Docker Services
 
