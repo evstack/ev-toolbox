@@ -19,7 +19,7 @@ services:
 
   ev-reth-fullnode:
     container_name: ev-reth-fullnode
-    image: ghcr.io/evstack/ev-reth:latest
+    image: ghcr.io/evstack/ev-reth:v0.1.0
     depends_on:
       jwt-init-fullnode:
         condition: service_completed_successfully
@@ -65,7 +65,7 @@ services:
 
   fullnode:
     container_name: fullnode
-    image: ghcr.io/evstack/ev-node-evm-single:main
+    image: ghcr.io/evstack/ev-node-evm-single:v1.0.0-beta.8
     ports:
       - $FULLNODE_EV_NODE_RPC_PORT:7331
       - $FULLNODE_EV_NODE_PROMETHEUS_PORT:26660
@@ -76,7 +76,6 @@ services:
     volumes:
       - fullnode-data:/root/.evm-single
       - jwttoken-fullnode:/root/jwt:ro
-      - celestia-node-export:/volumes/da_export:ro
       - sequencer-export:/volumes/sequencer_export
       - ./entrypoint.fullnode.sh:/usr/bin/entrypoint.sh
       - ../../lib/logging.sh:/usr/local/lib/logging.sh:ro
@@ -95,7 +94,6 @@ services:
       - DA_ADDRESS=http://celestia-node:26658
       - DA_HEADER_NAMESPACE=${FULLNODE_DA_HEADER_NAMESPACE}
       - DA_DATA_NAMESPACE=${FULLNODE_DA_DATA_NAMESPACE}
-      - DA_AUTH_TOKEN_PATH=/volumes/da_export/auth_token
       - DA_START_HEIGHT=${FULLNODE_DA_START_HEIGHT}
     networks:
       - evstack_shared
@@ -107,9 +105,6 @@ volumes:
     driver: local
   fullnode-data:
     driver: local
-  celestia-node-export:
-    external: true
-    name: celestia-node-export
   sequencer-export:
     external: true
     name: sequencer-export

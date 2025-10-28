@@ -66,19 +66,6 @@ fi
 cp -pr "${CONFIG_HOME}/config/genesis.json" "/volumes/sequencer_export/genesis.json"
 log "SUCCESS" "Exported genesis.json to /volumes/sequencer_export/genesis.json"
 
-# Importing DA auth token
-log "INFO" "Checking for DA authentication token"
-if [ -n "${DA_AUTH_TOKEN_PATH:-}" ]; then
-	if [ -f "${DA_AUTH_TOKEN_PATH}" ]; then
-		DA_AUTH_TOKEN=$(cat "${DA_AUTH_TOKEN_PATH}")
-		log "SUCCESS" "DA auth token loaded from: ${DA_AUTH_TOKEN_PATH}"
-	else
-		log "WARNING" "DA_AUTH_TOKEN_PATH specified but file not found: ${DA_AUTH_TOKEN_PATH}"
-	fi
-else
-	log "INFO" "No DA_AUTH_TOKEN_PATH specified"
-fi
-
 # Importing JWT token
 log "INFO" "Checking for JWT secret"
 if [ -n "${EVM_JWT_PATH:-}" ]; then

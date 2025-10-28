@@ -10,7 +10,8 @@ readonly SCRIPT_VERSION="1.7.0"
 readonly SCRIPT_NAME="deploy-evolve"
 readonly REPO_URL="https://github.com/evstack/ev-toolbox"
 readonly GITHUB_RAW_BASE="https://raw.githubusercontent.com/evstack/ev-toolbox"
-readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/main/ev-stacks"
+# readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/main/ev-stacks"
+readonly BASE_URL="$GITHUB_RAW_BASE/refs/heads/claude/chore/ev-stacks"
 readonly DEPLOYMENT_DIR="$HOME/evolve-deployment"
 
 # File and directory constants
@@ -573,8 +574,9 @@ download_da_celestia_files() {
 		"stacks/da-celestia/.env"
 		"stacks/da-celestia/celestia-app.Dockerfile"
 		"stacks/da-celestia/docker-compose.yml"
-		"stacks/da-celestia/entrypoint.appd.sh"
 		"stacks/da-celestia/entrypoint.da.sh"
+		"stacks/da-celestia/entrypoint.init-2.sh"
+		"stacks/da-celestia/entrypoint.init-3.sh"
 	)
 
 	for file in "${files[@]}"; do

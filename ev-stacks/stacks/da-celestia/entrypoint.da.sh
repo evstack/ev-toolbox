@@ -12,7 +12,6 @@ set -u
 . /usr/local/lib/logging.sh
 
 LIGHT_NODE_CONFIG_PATH=/home/celestia/config.toml
-TOKEN_PATH=${VOLUME_EXPORT_PATH}/auth_token
 
 log "INIT" "Starting Celestia Light Node initialization"
 log "INFO" "Light node config path: $LIGHT_NODE_CONFIG_PATH"
@@ -74,22 +73,6 @@ else
     log "INFO" "Config file already exists at $LIGHT_NODE_CONFIG_PATH"
     log "INFO" "Skipping initialization - light node already configured"
 fi
-
-# Export AUTH_TOKEN to shared volume
-log "AUTH" "Generating and exporting auth token to: $TOKEN_PATH"
-
-if ! TOKEN=$(celestia light auth write "--p2p.network=${DA_NETWORK}"); then
-    log "ERROR" "Failed to generate auth token"
-    exit 1
-fi
-log "SUCCESS" "Auth token generated successfully"
-
-log "INFO" "Writing auth token to shared volume"
-if ! echo "${TOKEN}" > ${TOKEN_PATH}; then
-    log "ERROR" "Failed to write auth token to $TOKEN_PATH"
-    exit 1
-fi
-log "SUCCESS" "Auth token exported to $TOKEN_PATH"
 
 log "INIT" "Starting Celestia light node"
 log "INFO" "Light node will be accessible on RPC port: ${DA_RPC_PORT}"
