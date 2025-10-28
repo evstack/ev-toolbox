@@ -17,16 +17,7 @@ readonly DEPLOYMENT_DIR="$HOME/evolve-deployment"
 # File and directory constants
 readonly ENV_FILE=".env"
 readonly DOCKER_COMPOSE_FILE="docker-compose.yml"
-readonly DOCKER_COMPOSE_DA_CELESTIA_FILE="docker-compose.da.celestia.yml"
-readonly DOCKER_COMPOSE_DA_LOCAL_FILE="docker-compose.da.local.yml"
 readonly GENESIS_FILE="genesis.json"
-readonly SEQUENCER_ENTRYPOINT="entrypoint.sequencer.sh"
-readonly FULLNODE_ENTRYPOINT="entrypoint.fullnode.sh"
-readonly APPD_ENTRYPOINT="entrypoint.appd.sh"
-readonly DA_ENTRYPOINT="entrypoint.da.sh"
-readonly SEQUENCER_DOCKERFILE="single-sequencer.Dockerfile"
-readonly CELESTIA_DOCKERFILE="celestia-app.Dockerfile"
-readonly LOGGING_LIB="logging.sh"
 
 # Directory structure constants
 readonly STACKS_DIR="stacks"
@@ -572,7 +563,6 @@ download_da_celestia_files() {
 
 	local files=(
 		"stacks/da-celestia/.env"
-		"stacks/da-celestia/celestia-app.Dockerfile"
 		"stacks/da-celestia/docker-compose.yml"
 		"stacks/da-celestia/entrypoint.da.sh"
 		"stacks/da-celestia/entrypoint.init-2.sh"
