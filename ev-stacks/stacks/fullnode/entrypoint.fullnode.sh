@@ -57,7 +57,7 @@ else
 fi
 
 # Importing genesis
-if [ -n "${DA_START_HEIGHT:-}" ] && [ ! -f "${CONFIG_HOME}/config/genesis.json" ]; then
+if [ ! -f "${CONFIG_HOME}/config/genesis.json" ]; then
 	sed "\$s/}\$/,\"da_start_height\":${FULLNODE_DA_START_HEIGHT}}/" /volumes/sequencer_export/genesis.json > "${CONFIG_HOME}/config/genesis.json"
 	log "SUCCESS" "genesis.json copied to: ${CONFIG_HOME}/config/genesis.json"
 fi
