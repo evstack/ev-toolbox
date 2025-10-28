@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Upgraded ghcr.io/evstack/ev-reth to `v0.1.0`
 - **Celestia DA Configuration Management**: Automatic TxWorkerAccounts configuration
   - Removed references to celestia-node rpc auth token
+  - Forced no BBR for celestia-app
   - Added init containers to avoid relying on custom celestia-node image
 
 ## [1.7.0] - 2025-10-10
