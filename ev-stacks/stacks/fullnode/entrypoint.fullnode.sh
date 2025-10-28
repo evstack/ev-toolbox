@@ -57,22 +57,12 @@ else
 fi
 
 # Importing genesis
-if [ -n "${DA_START_HEIGHT:-}" ] && [ ! -f "${CONFIG_HOME}/config/genesis.json" ]; then
-	sed "\$s/}\$/,\"da_start_height\":${FULLNODE_DA_START_HEIGHT}}/" /volumes/sequencer_export/genesis.json > "${CONFIG_HOME}/config/genesis.json"
+if [ -n "${DA_START_HEIGHT:-}" ]; then
+	sed "\$s/}\$/,\"da_start_height\":${DA_START_HEIGHT}}/" /volumes/sequencer_export/genesis.json > "${CONFIG_HOME}/config/genesis.json"
 	log "SUCCESS" "genesis.json copied to: ${CONFIG_HOME}/config/genesis.json"
-fi
-
-# Importing DA auth token
-log "INFO" "Checking for DA authentication token"
-if [ -n "${DA_AUTH_TOKEN_PATH:-}" ]; then
-	if [ -f "${DA_AUTH_TOKEN_PATH}" ]; then
-		DA_AUTH_TOKEN=$(cat "${DA_AUTH_TOKEN_PATH}")
-		log "SUCCESS" "DA auth token loaded from: ${DA_AUTH_TOKEN_PATH}"
-	else
-		log "WARNING" "DA_AUTH_TOKEN_PATH specified but file not found: ${DA_AUTH_TOKEN_PATH}"
-	fi
 else
-	log "INFO" "No DA_AUTH_TOKEN_PATH specified"
+	cp -pr /volumes/sequencer_export/genesis.json "${CONFIG_HOME}/config/genesis.json"
+	log "SUCCESS" "genesis.json copied to: ${CONFIG_HOME}/config/genesis.json"
 fi
 
 # Importing JWT token

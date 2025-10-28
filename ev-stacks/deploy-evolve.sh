@@ -16,16 +16,7 @@ readonly DEPLOYMENT_DIR="$HOME/evolve-deployment"
 # File and directory constants
 readonly ENV_FILE=".env"
 readonly DOCKER_COMPOSE_FILE="docker-compose.yml"
-readonly DOCKER_COMPOSE_DA_CELESTIA_FILE="docker-compose.da.celestia.yml"
-readonly DOCKER_COMPOSE_DA_LOCAL_FILE="docker-compose.da.local.yml"
 readonly GENESIS_FILE="genesis.json"
-readonly SEQUENCER_ENTRYPOINT="entrypoint.sequencer.sh"
-readonly FULLNODE_ENTRYPOINT="entrypoint.fullnode.sh"
-readonly APPD_ENTRYPOINT="entrypoint.appd.sh"
-readonly DA_ENTRYPOINT="entrypoint.da.sh"
-readonly SEQUENCER_DOCKERFILE="single-sequencer.Dockerfile"
-readonly CELESTIA_DOCKERFILE="celestia-app.Dockerfile"
-readonly LOGGING_LIB="logging.sh"
 
 # Directory structure constants
 readonly STACKS_DIR="stacks"
@@ -40,8 +31,7 @@ readonly DA_LOCAL_DIR="da-local"
 
 # Container and service name patterns
 readonly SEQUENCER_CONTAINERS="(sequencer|reth-sequencer|jwt-init)"
-readonly CELESTIA_CONTAINERS="(celestia-app|celestia-node|da-permission-fix)"
-readonly SHARED_VOLUME_NAME="celestia-node-export"
+readonly CELESTIA_CONTAINERS="(celestia-app|celestia-node|init-1-permission|init-2-appd|init-3-snapshot)"
 
 # Configuration constants
 readonly DEFAULT_BALANCE="0x4a47e3c12448f4ad000000"
@@ -571,10 +561,10 @@ download_da_celestia_files() {
 
 	local files=(
 		"stacks/da-celestia/.env"
-		"stacks/da-celestia/celestia-app.Dockerfile"
 		"stacks/da-celestia/docker-compose.yml"
-		"stacks/da-celestia/entrypoint.appd.sh"
 		"stacks/da-celestia/entrypoint.da.sh"
+		"stacks/da-celestia/entrypoint.init-2.sh"
+		"stacks/da-celestia/entrypoint.init-3.sh"
 	)
 
 	for file in "${files[@]}"; do
@@ -584,7 +574,7 @@ download_da_celestia_files() {
 	done
 
 	# Make entrypoint scripts executable
-	chmod +x entrypoint.appd.sh entrypoint.da.sh || error_exit "Failed to make entrypoint scripts executable"
+	chmod +x entrypoint.da.sh entrypoint.init-2.sh entrypoint.init-3.sh || error_exit "Failed to make entrypoint scripts executable"
 
 	log "SUCCESS" "DA-Celestia deployment files downloaded successfully"
 }
@@ -1564,8 +1554,9 @@ validate_da_celestia_files() {
 	local required_files=(
 		"docker-compose.yml"
 		".env"
-		"entrypoint.appd.sh"
 		"entrypoint.da.sh"
+		"entrypoint.init-2.sh"
+		"entrypoint.init-3.sh"
 	)
 
 	for file in "${required_files[@]}"; do

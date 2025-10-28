@@ -5,6 +5,19 @@ All notable changes to the EV-Stacks deployment framework will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2025-10-28
+
+### Changed
+- **Dependencies**:
+  - Upgraded ghcr.io/celestiaorg/celestia-node to `v0.28.2-mocha`
+  - Upgraded ghcr.io/celestiaorg/celestia-app-standalone to `v6.2.0-mocha`
+  - Upgraded ghcr.io/evstack/ev-node: to `v1.0.0-beta.8`
+  - Upgraded ghcr.io/evstack/ev-reth to `v0.1.0`
+- **Celestia DA Configuration Management**: Automatic TxWorkerAccounts configuration
+  - Removed references to celestia-node rpc auth token
+  - Forced no BBR for celestia-app
+  - Added init containers to avoid relying on custom celestia-node image
+
 ## [1.7.0] - 2025-10-10
 
 ### Changed

@@ -1,27 +1,50 @@
 ---
 services:
-  da-permission-fix:
-    container_name: da-permission-fix
+  init-1-permission:
     image: busybox
     user: root
     volumes:
-      - celestia-node-export:/data
-    command: chown -R 10001:10001 /data
+      - celestia-node-data:/data-node
+      - celestia-appd-data:/data-app
+    command: chown -R 10001:10001 /data-node /data-app
+
+  init-2-appd:
+    image: ghcr.io/celestiaorg/celestia-app:v6.2.0-mocha
+    env_file: .env
+    volumes:
+      - celestia-appd-data:/home/celestia/.celestia-app
+      - ./entrypoint.init-2.sh:/init-2-appd.sh
+    entrypoint: [/bin/bash, /init-2-appd.sh]
+    restart: "no"
+    depends_on:
+      init-1-permission:
+        condition: service_completed_successfully
+
+  init-3-snapshot:
+    image: ghcr.io/linuxserver/baseimage-alpine:3.22
+    env_file: .env
+    volumes:
+      - celestia-appd-data:/home/celestia/.celestia-app
+      - ./entrypoint.init-3.sh:/init-3-snapshot.sh
+    entrypoint: [/bin/bash, /init-3-snapshot.sh]
+    restart: "no"
+    depends_on:
+      init-2-appd:
+        condition: service_completed_successfully
+
   app:
+    depends_on:
+      init-3-snapshot:
+        condition: service_completed_successfully
     container_name: celestia-app
-    image: localhost/celestia-app:rolling
-    build:
-      context: .
-      dockerfile: celestia-app.Dockerfile
+    image: ghcr.io/celestiaorg/celestia-app:v6.2.0-mocha
     env_file: .env
     restart: always
     volumes:
       - celestia-appd-data:/home/celestia/.celestia-app
-      - ./entrypoint.appd.sh:/entrypoint.sh
-      - ../../lib/logging.sh:/usr/local/lib/logging.sh:ro
     environment:
       - VOLUME_EXPORT_PATH=/volumes/da_export
-    entrypoint: [/bin/bash, /entrypoint.sh]
+    command: [start, --force-no-bbr]
     healthcheck:
       test: ["CMD", "celestia-appd", "status"]
       interval: 30s
@@ -33,17 +56,14 @@ services:
 
   da:
     container_name: celestia-node
-    image: ghcr.io/celestiaorg/celestia-node:${CELESTIA_NODE_TAG}
+    image: ghcr.io/celestiaorg/celestia-node:v0.28.2-mocha
     env_file: .env
     restart: always
     depends_on:
-      da-permission-fix:
-        condition: service_completed_successfully
       app:
         condition: service_healthy
     volumes:
       - celestia-node-data:/home/celestia
-      - celestia-node-export:/volumes/da_export
       - ./entrypoint.da.sh:/entrypoint.sh
       - ../../lib/logging.sh:/usr/local/lib/logging.sh:ro
     environment:
@@ -65,9 +85,6 @@ volumes:
     driver: local
   celestia-node-data:
     driver: local
-  celestia-node-export:
-    driver: local
-    name: celestia-node-export
 
 networks:
   evstack_shared:
