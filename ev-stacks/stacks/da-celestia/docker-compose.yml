@@ -4,7 +4,7 @@ services:
     image: busybox
     user: root
     volumes:
-      - celestia-node-export:/data-node
+      - celestia-node-data:/data-node
       - celestia-appd-data:/data-app
     command: chown -R 10001:10001 /data-node /data-app
 
