@@ -57,8 +57,13 @@ else
 fi
 
 # Importing genesis
-sed "\$s/}\$/,\"da_start_height\":${DA_START_HEIGHT}}/" /volumes/sequencer_export/genesis.json > "${CONFIG_HOME}/config/genesis.json"
-log "SUCCESS" "genesis.json copied to: ${CONFIG_HOME}/config/genesis.json"
+if [ -n "${DA_START_HEIGHT:-}" ]; then
+	sed "\$s/}\$/,\"da_start_height\":${DA_START_HEIGHT}}/" /volumes/sequencer_export/genesis.json > "${CONFIG_HOME}/config/genesis.json"
+	log "SUCCESS" "genesis.json copied to: ${CONFIG_HOME}/config/genesis.json"
+else
+	cp -pr /volumes/sequencer_export/genesis.json "${CONFIG_HOME}/config/genesis.json"
+	log "SUCCESS" "genesis.json copied to: ${CONFIG_HOME}/config/genesis.json"
+fi
 
 # Importing JWT token
 log "INFO" "Checking for JWT secret"
