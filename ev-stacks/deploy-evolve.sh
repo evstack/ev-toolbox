@@ -32,7 +32,7 @@ readonly DA_LOCAL_DIR="da-local"
 
 # Container and service name patterns
 readonly SEQUENCER_CONTAINERS="(sequencer|reth-sequencer|jwt-init)"
-readonly CELESTIA_CONTAINERS="(celestia-app|celestia-node|da-permission-fix)"
+readonly CELESTIA_CONTAINERS="(celestia-app|celestia-node|init-1-permission|init-2-appd|init-3-snapshot)"
 readonly SHARED_VOLUME_NAME="celestia-node-export"
 
 # Configuration constants

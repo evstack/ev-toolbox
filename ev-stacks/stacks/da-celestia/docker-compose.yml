@@ -1,7 +1,6 @@
 ---
 services:
   init-1-permission:
-    container_name: da-permission-fix
     image: busybox
     user: root
     volumes:
@@ -61,8 +60,6 @@ services:
     env_file: .env
     restart: always
     depends_on:
-      da-permission-fix:
-        condition: service_completed_successfully
       app:
         condition: service_healthy
     volumes:
