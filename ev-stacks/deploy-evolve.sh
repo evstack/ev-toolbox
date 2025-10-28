@@ -1556,8 +1556,9 @@ validate_da_celestia_files() {
 	local required_files=(
 		"docker-compose.yml"
 		".env"
-		"entrypoint.appd.sh"
 		"entrypoint.da.sh"
+		"entrypoint.init-2.sh"
+		"entrypoint.init-3.sh"
 	)
 
 	for file in "${required_files[@]}"; do
