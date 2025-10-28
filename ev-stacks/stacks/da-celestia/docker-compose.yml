@@ -13,7 +13,7 @@ services:
     env_file: .env
     volumes:
       - celestia-appd-data:/home/celestia/.celestia-app
-      - ./init-2-appd.sh:/init-2-appd.sh
+      - ./entrypoint.init-2.sh:/init-2-appd.sh
     entrypoint: [/bin/bash, /init-2-appd.sh]
     restart: "no"
     depends_on:
@@ -25,7 +25,7 @@ services:
     env_file: .env
     volumes:
       - celestia-appd-data:/home/celestia/.celestia-app
-      - ./init-3-snapshot.sh:/init-3-snapshot.sh
+      - ./entrypoint.init-3.sh:/init-3-snapshot.sh
     entrypoint: [/bin/bash, /init-3-snapshot.sh]
     restart: "no"
     depends_on:
