@@ -9,7 +9,7 @@ services:
     command: chown -R 10001:10001 /data-node /data-app
 
   init-2-appd:
-    image: &image ghcr.io/celestiaorg/celestia-app:v6.2.0-mocha
+    image: ghcr.io/celestiaorg/celestia-app:v6.2.0-mocha
     env_file: .env
     volumes:
       - celestia-appd-data:/home/celestia/.celestia-app
@@ -37,7 +37,7 @@ services:
       init-3-snapshot:
         condition: service_completed_successfully
     container_name: celestia-app
-    image: *image
+    image: ghcr.io/celestiaorg/celestia-app:v6.2.0-mocha
     env_file: .env
     restart: always
     volumes:

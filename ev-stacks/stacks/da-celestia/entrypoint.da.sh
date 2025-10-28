@@ -74,6 +74,37 @@ else
     log "INFO" "Skipping initialization - light node already configured"
 fi
 
+# Ensure TxWorkerAccounts is set to 8 under [State] section
+log "CONFIG" "Ensuring TxWorkerAccounts is set to 8 in [State] section"
+if grep -q "^\[State\]" "$LIGHT_NODE_CONFIG_PATH"; then
+    # Check if TxWorkerAccounts exists under [State]
+    if grep -A 20 "^\[State\]" "$LIGHT_NODE_CONFIG_PATH" | grep -q "^[[:space:]]*TxWorkerAccounts"; then
+        # TxWorkerAccounts exists, check if it's set to 8
+        CURRENT_VALUE=$(grep -A 20 "^\[State\]" "$LIGHT_NODE_CONFIG_PATH" | grep "^[[:space:]]*TxWorkerAccounts" | head -1 | sed 's/.*=[[:space:]]*//')
+        if [ "$CURRENT_VALUE" != "8" ]; then
+            log "CONFIG" "Updating TxWorkerAccounts from $CURRENT_VALUE to 8"
+            # Update the value to 8 (only under [State] section)
+            if ! sed -i '/^\[State\]/,/^\[/ s/^[[:space:]]*TxWorkerAccounts[[:space:]]*=.*/  TxWorkerAccounts = 8/' "$LIGHT_NODE_CONFIG_PATH"; then
+                log "ERROR" "Failed to update TxWorkerAccounts"
+                exit 1
+            fi
+            log "SUCCESS" "TxWorkerAccounts updated to 8"
+        else
+            log "INFO" "TxWorkerAccounts already set to 8, no changes needed"
+        fi
+    else
+        # TxWorkerAccounts doesn't exist, add it after [State] section
+        log "CONFIG" "Adding TxWorkerAccounts = 8 to [State] section"
+        if ! sed -i '/^\[State\]/a\  TxWorkerAccounts = 8' "$LIGHT_NODE_CONFIG_PATH"; then
+            log "ERROR" "Failed to add TxWorkerAccounts to [State] section"
+            exit 1
+        fi
+        log "SUCCESS" "TxWorkerAccounts added to [State] section"
+    fi
+else
+    log "WARN" "[State] section not found in config file"
+fi
+
 log "INIT" "Starting Celestia light node"
 log "INFO" "Light node will be accessible on RPC port: ${DA_RPC_PORT}"
 log "INFO" "Starting with skip-auth enabled for RPC access"
