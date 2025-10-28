@@ -576,7 +576,7 @@ download_da_celestia_files() {
 	done
 
 	# Make entrypoint scripts executable
-	chmod +x entrypoint.appd.sh entrypoint.da.sh || error_exit "Failed to make entrypoint scripts executable"
+	chmod +x entrypoint.da.sh entrypoint.init-2.sh entrypoint.init-3.sh || error_exit "Failed to make entrypoint scripts executable"
 
 	log "SUCCESS" "DA-Celestia deployment files downloaded successfully"
 }
