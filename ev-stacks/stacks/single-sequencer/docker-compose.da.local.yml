@@ -89,6 +89,7 @@ services:
       - EVM_SIGNER_PASSPHRASE=${EVM_SIGNER_PASSPHRASE}
       - DA_BLOCK_TIME=30s
       - DA_ADDRESS=http://local-da:7980
+      - DA_SIGNING_ADDRESSES=${DA_SIGNING_ADDRESSES}
     networks:
       - evstack_shared
 

@@ -91,6 +91,7 @@ services:
       - DA_ADDRESS=http://celestia-node:26658
       - DA_HEADER_NAMESPACE=${SEQUENCER_DA_HEADER_NAMESPACE}
       - DA_DATA_NAMESPACE=${SEQUENCER_DA_DATA_NAMESPACE}
+      - DA_SIGNING_ADDRESSES=${DA_SIGNING_ADDRESSES}
     networks:
       - evstack_shared
 

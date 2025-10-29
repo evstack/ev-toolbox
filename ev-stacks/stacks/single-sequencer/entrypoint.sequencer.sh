@@ -186,6 +186,11 @@ if [ -n "${DA_DATA_NAMESPACE:-}" ]; then
 	log "DEBUG" "Added DA data namespace flag: $DA_DATA_NAMESPACE"
 fi
 
+if [ -n "${DA_SIGNING_ADDRESSES:-}" ]; then
+	default_flags="$default_flags --rollkit.da.signing_addresses $DA_SIGNING_ADDRESSES"
+	log "DEBUG" "Added DA signing addresses flag: $DA_SIGNING_ADDRESSES"
+fi
+
 default_flags="${default_flags} --home=${CONFIG_HOME}"
 
 log "SUCCESS" "Configuration flags prepared successfully"
