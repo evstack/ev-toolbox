@@ -65,19 +65,6 @@ else
 	log "SUCCESS" "genesis.json copied to: ${CONFIG_HOME}/config/genesis.json"
 fi
 
-# Importing JWT token
-log "INFO" "Checking for JWT secret"
-if [ -n "${EVM_JWT_PATH:-}" ]; then
-	if [ -f "${EVM_JWT_PATH}" ]; then
-		EVM_JWT_SECRET=$(cat "${EVM_JWT_PATH}")
-		log "SUCCESS" "JWT secret loaded from: ${EVM_JWT_PATH}"
-	else
-		log "WARNING" "EVM_JWT_PATH specified but file not found: ${EVM_JWT_PATH}"
-	fi
-else
-	log "INFO" "No EVM_JWT_PATH specified"
-fi
-
 # Get sequencer node id
 log "NETWORK" "Fetching sequencer P2P information from single-sequencer:7331"
 RESPONSE=$(curl -sX POST \
@@ -157,9 +144,9 @@ log "INFO" "Building startup configuration flags"
 default_flags=""
 
 # Add required flags if environment variables are set
-if [ -n "${EVM_JWT_SECRET:-}" ]; then
-	default_flags="${default_flags} --evm.jwt-secret ${EVM_JWT_SECRET}"
-	log "DEBUG" "Added JWT secret flag"
+if [ -n "${EVM_JWT_SECRET_FILE:-}" ]; then
+	default_flags="$default_flags --evm.jwt-secret-file $EVM_JWT_SECRET_FILE"
+	log "DEBUG" "Added JWT secret file flag"
 fi
 
 if [ -n "${EVM_GENESIS_HASH:-}" ]; then
@@ -188,11 +175,6 @@ log "INFO" "Configuring Data Availability (DA) settings"
 if [ -n "${DA_ADDRESS:-}" ]; then
 	default_flags="${default_flags} --evnode.da.address ${DA_ADDRESS}"
 	log "DEBUG" "Added DA address flag: ${DA_ADDRESS}"
-fi
-
-if [ -n "${DA_AUTH_TOKEN:-}" ]; then
-	default_flags="${default_flags} --evnode.da.auth_token ${DA_AUTH_TOKEN}"
-	log "DEBUG" "Added DA auth token flag"
 fi
 
 if [ -n "${DA_DATA_NAMESPACE:-}" ]; then

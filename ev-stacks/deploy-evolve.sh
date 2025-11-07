@@ -6,7 +6,7 @@
 set -euo pipefail
 
 # Script metadata
-readonly SCRIPT_VERSION="1.7.0"
+readonly SCRIPT_VERSION="1.9.0"
 readonly SCRIPT_NAME="deploy-evolve"
 readonly REPO_URL="https://github.com/evstack/ev-toolbox"
 readonly GITHUB_RAW_BASE="https://raw.githubusercontent.com/evstack/ev-toolbox"
@@ -956,13 +956,11 @@ setup_sequencer_configuration() {
 		error_exit "Environment file is not readable: $env_file"
 	fi
 
-	# Check for missing EVM_SIGNER_PASSPHRASE and generate if empty
-	if grep -q "^EVM_SIGNER_PASSPHRASE=$" "$env_file" || ! grep -q "^EVM_SIGNER_PASSPHRASE=" "$env_file"; then
-		log "CONFIG" "Generating random EVM signer passphrase..."
-		local passphrase=$(openssl rand -base64 32 | tr -d '\n')
-		update_env_var "$env_file" "EVM_SIGNER_PASSPHRASE" "$passphrase"
-		log "SUCCESS" "EVM signer passphrase generated and set"
-	fi
+	# Generate EVM_SIGNER_PASSPHRASE_FILE
+	log "CONFIG" "Generating random EVM signer passphrase..."
+	local passphrase=$(openssl rand -base64 32 | tr -d '\n')
+	echo "$passphrase" > ./passphrase
+	log "SUCCESS" "EVM signer passphrase generated and set"
 
 	# Check for missing CHAIN_ID and prompt user
 	if grep -q "^CHAIN_ID=$" "$env_file" || ! grep -q "^CHAIN_ID=" "$env_file"; then

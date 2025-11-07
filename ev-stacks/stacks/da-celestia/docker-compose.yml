@@ -37,7 +37,7 @@ services:
       init-3-snapshot:
         condition: service_completed_successfully
     container_name: celestia-app
-    image: ghcr.io/celestiaorg/celestia-app:v6.2.0-mocha
+    image: ghcr.io/celestiaorg/celestia-app:v6.2.2-mocha
     env_file: .env
     restart: always
     volumes:

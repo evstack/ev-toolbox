@@ -88,7 +88,7 @@ services:
     environment:
       - EVM_ENGINE_URL=http://ev-reth-fullnode:8551
       - EVM_ETH_URL=http://ev-reth-fullnode:8545
-      - EVM_JWT_PATH=/root/jwt/jwt.hex
+      - EVM_JWT_SECRET_FILE=/root/jwt/jwt.hex
       - EVM_BLOCK_TIME=500ms
       - DA_BLOCK_TIME=30s
       - DA_ADDRESS=http://local-da:7980

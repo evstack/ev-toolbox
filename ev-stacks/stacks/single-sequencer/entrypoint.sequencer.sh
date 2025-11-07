@@ -49,9 +49,9 @@ if [ ! -f "$CONFIG_HOME/config/node_key.json" ]; then
 	init_flags="--home=$CONFIG_HOME"
 
 	# Add required flags if environment variables are set
-	if [ -n "${EVM_SIGNER_PASSPHRASE:-}" ]; then
-		init_flags="$init_flags --evnode.node.aggregator=true --evnode.signer.passphrase $EVM_SIGNER_PASSPHRASE"
-		log "DEBUG" "EVM_SIGNER_PASSPHRASE is set, enabling aggregator mode"
+	if [ -n "${EVM_SIGNER_PASSPHRASE_FILE:-}" ]; then
+		init_flags="$init_flags --evnode.node.aggregator=true --evnode.signer.passphrase_file $EVM_SIGNER_PASSPHRASE_FILE"
+		log "DEBUG" "EVM_SIGNER_PASSPHRASE_FILE is set, enabling aggregator mode"
 	fi
 
 	INIT_COMMAND="evm-single init $init_flags"
@@ -65,19 +65,6 @@ fi
 # Exporting genesis file
 cp -pr "${CONFIG_HOME}/config/genesis.json" "/volumes/sequencer_export/genesis.json"
 log "SUCCESS" "Exported genesis.json to /volumes/sequencer_export/genesis.json"
-
-# Importing JWT token
-log "INFO" "Checking for JWT secret"
-if [ -n "${EVM_JWT_PATH:-}" ]; then
-	if [ -f "$EVM_JWT_PATH" ]; then
-		EVM_JWT_SECRET=$(cat ${EVM_JWT_PATH})
-		log "SUCCESS" "JWT secret loaded from: $EVM_JWT_PATH"
-	else
-		log "WARNING" "EVM_JWT_PATH specified but file not found: $EVM_JWT_PATH"
-	fi
-else
-	log "INFO" "No EVM_JWT_PATH specified"
-fi
 
 # Auto-retrieve genesis hash if not provided
 log "INFO" "Checking genesis hash configuration"
@@ -134,9 +121,9 @@ log "INFO" "Building startup configuration flags"
 default_flags=""
 
 # Add required flags if environment variables are set
-if [ -n "${EVM_JWT_SECRET:-}" ]; then
-	default_flags="$default_flags --evm.jwt-secret $EVM_JWT_SECRET"
-	log "DEBUG" "Added JWT secret flag"
+if [ -n "${EVM_JWT_SECRET_FILE:-}" ]; then
+	default_flags="$default_flags --evm.jwt-secret-file $EVM_JWT_SECRET_FILE"
+	log "DEBUG" "Added JWT secret file flag"
 fi
 
 if [ -n "${EVM_GENESIS_HASH:-}" ]; then
@@ -159,8 +146,8 @@ if [ -n "${EVM_BLOCK_TIME:-}" ]; then
 	log "DEBUG" "Added block time flag: $EVM_BLOCK_TIME"
 fi
 
-if [ -n "${EVM_SIGNER_PASSPHRASE:-}" ]; then
-	default_flags="$default_flags --evnode.node.aggregator=true --evnode.signer.passphrase $EVM_SIGNER_PASSPHRASE"
+if [ -n "${EVM_SIGNER_PASSPHRASE_FILE:-}" ]; then
+	default_flags="$default_flags --evnode.node.aggregator=true --evnode.signer.passphrase_file $EVM_SIGNER_PASSPHRASE_FILE"
 	log "DEBUG" "Added aggregator and signer passphrase flags"
 fi
 
@@ -169,11 +156,6 @@ log "INFO" "Configuring Data Availability (DA) settings"
 if [ -n "${DA_ADDRESS:-}" ]; then
 	default_flags="$default_flags --evnode.da.address $DA_ADDRESS"
 	log "DEBUG" "Added DA address flag: $DA_ADDRESS"
-fi
-
-if [ -n "${DA_AUTH_TOKEN:-}" ]; then
-	default_flags="$default_flags --evnode.da.auth_token $DA_AUTH_TOKEN"
-	log "DEBUG" "Added DA auth token flag"
 fi
 
 if [ -n "${DA_HEADER_NAMESPACE:-}" ]; then

@@ -72,6 +72,7 @@ services:
     volumes:
       - sequencer-data:/root/.evm-single
       - jwttoken-sequencer:/root/jwt:ro
+      - ./passphrase:/root/passphrase:ro
       - sequencer-export:/volumes/sequencer_export
       - ./entrypoint.sequencer.sh:/usr/bin/entrypoint.sh
       - ../../lib/logging.sh:/usr/local/lib/logging.sh:ro
@@ -81,12 +82,13 @@ services:
       - --evnode.p2p.listen_address=/ip4/0.0.0.0/tcp/7676
       - --evnode.instrumentation.prometheus
       - --evnode.instrumentation.prometheus_listen_addr=:26660
+      - --evnode.rpc.enable_da_visualization
     environment:
       - EVM_ENGINE_URL=http://ev-reth-sequencer:8551
       - EVM_ETH_URL=http://ev-reth-sequencer:8545
-      - EVM_JWT_PATH=/root/jwt/jwt.hex
+      - EVM_JWT_SECRET_FILE=/root/jwt/jwt.hex
       - EVM_BLOCK_TIME=500ms
-      - EVM_SIGNER_PASSPHRASE=${EVM_SIGNER_PASSPHRASE}
+      - EVM_SIGNER_PASSPHRASE_FILE=/root/passphrase
       - DA_BLOCK_TIME=30s
       - DA_ADDRESS=http://celestia-node:26658
       - DA_HEADER_NAMESPACE=${SEQUENCER_DA_HEADER_NAMESPACE}
