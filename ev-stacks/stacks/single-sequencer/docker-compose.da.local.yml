@@ -84,9 +84,9 @@ services:
     environment:
       - EVM_ENGINE_URL=http://ev-reth-sequencer:8551
       - EVM_ETH_URL=http://ev-reth-sequencer:8545
-      - EVM_JWT_PATH=/root/jwt/jwt.hex
+      - EVM_JWT_SECRET_FILE=/root/jwt/jwt.hex
       - EVM_BLOCK_TIME=500ms
-      - EVM_SIGNER_PASSPHRASE=${EVM_SIGNER_PASSPHRASE}
+      - EVM_SIGNER_PASSPHRASE_FILE=/root/passphrase
       - DA_BLOCK_TIME=30s
       - DA_ADDRESS=http://local-da:7980
     networks:
