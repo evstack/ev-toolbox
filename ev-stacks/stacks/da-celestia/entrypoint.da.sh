@@ -76,14 +76,14 @@ fi
 # Ensure TxWorkerAccounts is set to 8 under [State] section
 log "CONFIG" "Ensuring TxWorkerAccounts is set to 8 in [State] section"
 if grep -q "^\[State\]" "$LIGHT_NODE_CONFIG_PATH"; then
-    # Check if TxWorkerAccounts exists under [State]
-    if grep -A 20 "^\[State\]" "$LIGHT_NODE_CONFIG_PATH" | grep -q "^[[:space:]]*TxWorkerAccounts"; then
+    # Check if TxWorkerAccounts exists anywhere in the config
+    if grep -q "^[[:space:]]*TxWorkerAccounts[[:space:]]*=" "$LIGHT_NODE_CONFIG_PATH"; then
         # TxWorkerAccounts exists, check if it's set to 8
-        CURRENT_VALUE=$(grep -A 20 "^\[State\]" "$LIGHT_NODE_CONFIG_PATH" | grep "^[[:space:]]*TxWorkerAccounts" | head -1 | sed 's/.*=[[:space:]]*//')
+        CURRENT_VALUE=$(grep "^[[:space:]]*TxWorkerAccounts[[:space:]]*=" "$LIGHT_NODE_CONFIG_PATH" | head -1 | sed 's/.*=[[:space:]]*//')
         if [ "$CURRENT_VALUE" != "8" ]; then
             log "CONFIG" "Updating TxWorkerAccounts from $CURRENT_VALUE to 8"
-            # Update the value to 8 (only under [State] section)
-            if ! sed -i '/^\[State\]/,/^\[/ s/^[[:space:]]*TxWorkerAccounts[[:space:]]*=.*/  TxWorkerAccounts = 8/' "$LIGHT_NODE_CONFIG_PATH"; then
+            # Update the value to 8
+            if ! sed -i 's/^[[:space:]]*TxWorkerAccounts[[:space:]]*=.*/  TxWorkerAccounts = 8/' "$LIGHT_NODE_CONFIG_PATH"; then
                 log "ERROR" "Failed to update TxWorkerAccounts"
                 exit 1
             fi
