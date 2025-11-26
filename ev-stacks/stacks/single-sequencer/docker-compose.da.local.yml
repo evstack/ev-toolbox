@@ -61,7 +61,7 @@ services:
 
   single-sequencer:
     container_name: single-sequencer
-    image: ghcr.io/evstack/ev-node-evm-single:v1.0.0-beta.8
+    image: ghcr.io/evstack/ev-node-evm-single:v1.0.0-beta.10
     env_file: .env
     ports:
       - $SEQUENCER_EV_NODE_PROMETHEUS_PORT:26660
