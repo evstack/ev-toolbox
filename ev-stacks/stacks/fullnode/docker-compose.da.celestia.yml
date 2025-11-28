@@ -65,7 +65,7 @@ services:
 
   fullnode:
     container_name: fullnode
-    image: ghcr.io/evstack/ev-node-evm-single:v1.0.0-beta.10
+    image: ghcr.io/evstack/ev-node-evm:v1.0.0-beta.10
     ports:
       - $FULLNODE_EV_NODE_RPC_PORT:7331
       - $FULLNODE_EV_NODE_PROMETHEUS_PORT:26660
@@ -74,7 +74,7 @@ services:
       ev-reth-fullnode:
         condition: service_started
     volumes:
-      - fullnode-data:/root/.evm-single
+      - fullnode-data:/root/.evm
       - jwttoken-fullnode:/root/jwt:ro
       - sequencer-export:/volumes/sequencer_export
       - ./entrypoint.fullnode.sh:/usr/bin/entrypoint.sh
