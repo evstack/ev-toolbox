@@ -1,7 +1,7 @@
 services:
   local-da:
     container_name: local-da
-    image: ghcr.io/evstack/local-da:${LOCAL_DA_TAG}
+    image: ghcr.io/evstack/ev-node-local-da:${LOCAL_DA_TAG}
     env_file: .env
     restart: always
     command: ["-listen-all"]
