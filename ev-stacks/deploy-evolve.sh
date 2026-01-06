@@ -1164,7 +1164,7 @@ prompt_namespace_input() {
 # Fetch latest block information from Celestia consensus endpoint
 fetch_celestia_latest_block() {
 	log "CONFIG" "Setting up trusted hash from latest block"
-	local consensus_url="https://full.consensus.mocha-4.celestia-mocha.com/block"
+	local consensus_url="https://rpc-mocha.pops.one/block"
 	log "DOWNLOAD" "Fetching latest block information from: $consensus_url"
 
 	# Fetch block information with proper error handling
