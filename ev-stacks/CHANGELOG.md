@@ -5,6 +5,14 @@ All notable changes to the EV-Stacks deployment framework will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2026-01-29
+
+### Changed
+
+- **Dependencies**:
+  - Upgraded ghcr.io/evstack/ev-node-evm: to `v1.0.0-rc.1`
+  - Upgraded ghcr.io/evstack/ev-reth: to `v0.2.2`
+
 ## [1.11.0] - 2026-01-06
 
 ### Changed
@@ -160,7 +168,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- **Custom Dockerfile Cleanup**: Removed custom `ev-node-evm` Dockerfile in favor of standardized configurations
+- **Custom Dockerfile Cleanup**: Removed custom `ev-node-evm-single` Dockerfile in favor of standardized configurations
 
 ### Technical Details
 

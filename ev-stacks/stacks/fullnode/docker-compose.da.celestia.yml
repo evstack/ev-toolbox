@@ -19,7 +19,7 @@ services:
 
   ev-reth-fullnode:
     container_name: ev-reth-fullnode
-    image: ghcr.io/evstack/ev-reth:v0.1.0
+    image: ghcr.io/evstack/ev-reth:v0.2.2
     depends_on:
       jwt-init-fullnode:
         condition: service_completed_successfully
