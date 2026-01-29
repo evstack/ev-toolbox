@@ -37,7 +37,6 @@ services:
     entrypoint: /entrypoint.sh
     command:
       - node
-      - --ev-reth.enable
       - --engine.persistence-threshold=0
       - --engine.memory-block-buffer-target=0
       - --engine.always-process-payload-attributes-on-canonical-head
