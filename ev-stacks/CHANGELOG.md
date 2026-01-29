@@ -5,6 +5,14 @@ All notable changes to the EV-Stacks deployment framework will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2026-01-29
+
+### Changed
+
+- **Dependencies**:
+  - Upgraded ghcr.io/evstack/ev-node-evm: to `v1.0.0-rc.1`
+  - Upgraded ghcr.io/evstack/ev-reth: to `v0.2.2`
+
 ## [1.11.0] - 2026-01-06
 
 ### Changed
@@ -17,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.10.0] - 2025-11-26
 
 ### Changed
+
 - **Added**
   - Support for celestia-node multi-account with round-robin address selection
 - **Dependencies**:
@@ -27,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.9.0] - 2025-11-07
 
 ### Changed
+
 - **Dependencies**:
   - Upgraded ghcr.io/celestiaorg/celestia-app-standalone to `v6.2.2-mocha`
   - Upgraded ghcr.io/evstack/ev-node: to `v1.0.0-beta.9`
@@ -34,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.0] - 2025-10-28
 
 ### Changed
+
 - **Dependencies**:
   - Upgraded ghcr.io/celestiaorg/celestia-node to `v0.28.2-mocha`
   - Upgraded ghcr.io/celestiaorg/celestia-app-standalone to `v6.2.0-mocha`
@@ -47,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.7.0] - 2025-10-10
 
 ### Changed
+
 - **Dependencies**:
   - Upgraded ghcr.io/celestiaorg/celestia-node to `v0.27.5-mocha`
   - Upgraded ghcr.io/celestiaorg/celestia-app-standalone to `v6.0.5-mocha`
@@ -54,45 +66,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Evm-single app does not support evolve.da.start_height anymore
 
 ### Fixed
+
 - **Shell syntax**: Fixed the "bad substitution" on macOS
 - **Shell syntax**: Fixed the itrocket URLs for celestia-app snapshots
 
 ## [1.6.0] - 2025-09-12
 
 ### Changed
+
 - **Ev-reth Flag**: More performance on ev-reth
   - Added launch argument `--engine.always-process-payload-attributes-on-canonical-head`
 
 ## [1.5.0] - 2025-09-08
 
 ### Added
+
 - **Dynamic Celestia Start Height Configuration**: Automatic fetching and setting of start height from latest Celestia block at the time of deployment
 
 ### Fixed
+
 - **DA Namespace Flag**: Corrected flag usage in sequencer and fullnode entrypoints
   - Changed from `--evnode.da.header_namespace` back to `--evnode.da.namespace` for proper compatibility
 
 ## [1.4.2] - 2025-09-08
 
 ### Fixed
+
 - **Fullnode deployment script**: `entrypoint.ev-reth.sh` is now properly deployed and made executable
 - **Celestia DA initialization**: Improved trusted state management with dynamic latest block fetching during initial setup only
 
 ### Changed
+
 - **Dependencies**:
   - da-celestia: Use `ghcr.io/celestiaorg/celestia-app` instead of `ghcr.io/celestiaorg/celestia-app-standalone`
 
 ### Improved
+
 - **Deployment script**: Removed unnecessary shared volume creation logic for cleaner deployment process
 
 ## [1.4.1] - 2025-09-02
 
 ### Fixed
+
 - **Fullnode deployment script**: `entrypoint.ev-reth.sh` is now deployed as intended
 
 ## [1.4.0] - 2025-09-01
 
 ### Changed
+
 - **Dependencies**:
   - Upgraded ghcr.io/celestiaorg/celestia-node to `v0.25.3-mocha`
   - Upgraded ghcr.io/celestiaorg/celestia-app-standalone to `v5.0.2-mocha`
@@ -100,6 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0] - 2025-09-01
 
 ### Added
+
 - **Ethereum Indexer Service**: New `eth-indexer` stack for blockchain data indexing
   - Based on [01builders/eth-indexer](https://github.com/01builders/eth-indexer)
   - Ponder-based indexing service for efficient blockchain data processing
@@ -112,11 +134,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.1] - 2025-08-27
 
 ### Fixed
+
 - **Transactions can now be submitted to the fullnode**: ev-reth-fullnode now connects to ev-reth-sequencer as a trusted peer
 
 ## [1.2.0] - 2025-08-25
 
 ### Added
+
 - **Local Data Availability (DA) Support**: New `da-local` stack for development and testing environments
   - Lightweight local DA layer that doesn't require external dependencies
   - Ideal for rapid development and testing scenarios
@@ -138,13 +162,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatic selection based on chosen DA layer
 
 ### Changed
+
 - **Deployment Script Enhancements**:
   - Improved service endpoint documentation in deployment status
 
 ### Removed
+
 - **Custom Dockerfile Cleanup**: Removed custom `ev-node-evm-single` Dockerfile in favor of standardized configurations
 
 ### Technical Details
+
 - The deployment script now supports up to 6 different service stacks:
   - Single Sequencer (required)
   - Fullnode (optional)
@@ -154,7 +181,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Eth-Explorer (optional)
 
 ### Migration Guide
+
 Users upgrading from version 1.1.0 can:
+
 1. Run the updated deployment script to access new service options
 2. Choose to deploy additional services (faucet, explorer, local DA) alongside existing infrastructure
 3. Existing deployments remain fully compatible with no breaking changes
@@ -162,6 +191,7 @@ Users upgrading from version 1.1.0 can:
 ## [1.1.0] - 2025-08-12
 
 ### Added
+
 - Support for separate header and data namespaces in Celestia DA integration
 - New environment variables `DA_HEADER_NAMESPACE` and `DA_DATA_NAMESPACE`
 - Enhanced deployment script prompts for both namespace configurations
@@ -169,6 +199,7 @@ Users upgrading from version 1.1.0 can:
 - Added `--ev-reth.enable` flag to ev-reth node configurations for proper integration
 
 ### Changed
+
 - **BREAKING**: Replaced single `DA_NAMESPACE` environment variable with two separate variables:
   - `DA_HEADER_NAMESPACE` - for header blob categorization on Celestia
   - `DA_DATA_NAMESPACE` - for data blob categorization on Celestia
@@ -185,11 +216,13 @@ Users upgrading from version 1.1.0 can:
 - Updated documentation and examples to reflect the new namespace structure
 
 ### Removed
+
 - **BREAKING**: Removed deprecated `DA_NAMESPACE` environment variable
 - **BREAKING**: Removed deprecated `--chain_id` flag from ev-node start command
 - Removed all references to the old single namespace configuration
 
 ### Migration Guide
+
 If you are upgrading from version 1.0.0:
 
 1. **Update Environment Variables**: Replace `DA_NAMESPACE` with both `DA_HEADER_NAMESPACE` and `DA_DATA_NAMESPACE` in your `.env` files
@@ -198,6 +231,7 @@ If you are upgrading from version 1.0.0:
 4. **Redeploy**: Run the deployment script again to ensure all configurations are updated with the new namespace variables
 
 Example migration:
+
 ```bash
 # Before (v1.0.0)
 DA_NAMESPACE="000000000000000000000000000000000000002737d4d967c7ca526dd5"
@@ -208,6 +242,7 @@ DA_DATA_NAMESPACE="namespace_test_data"
 ```
 
 ### Technical Details
+
 - The deployment script now prompts users to enter both namespace values separately during setup
 - Both namespaces undergo validation for encoded string format (alphanumeric characters, underscores, and hyphens)
 - The script automatically propagates namespace values from da-celestia configuration to sequencer and fullnode configurations
@@ -216,6 +251,7 @@ DA_DATA_NAMESPACE="namespace_test_data"
 ## [1.0.0] - 2025-07-31
 
 ### Added
+
 - Initial release of EV-Stacks deployment framework
 - Single sequencer deployment stack
 - Celestia DA integration support
@@ -228,6 +264,7 @@ DA_DATA_NAMESPACE="namespace_test_data"
 - Comprehensive documentation and examples
 
 ### Features
+
 - One-liner deployment script for easy setup
 - Support for Celestia mocha-4 testnet integration
 - Automatic service dependency management
