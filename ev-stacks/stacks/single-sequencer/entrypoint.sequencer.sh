@@ -169,7 +169,7 @@ if [ -n "${DA_DATA_NAMESPACE:-}" ]; then
 fi
 
 if [ -n "${DA_SIGNING_ADDRESSES:-}" ]; then
-	default_flags="$default_flags --rollkit.da.signing_addresses $DA_SIGNING_ADDRESSES"
+	default_flags="$default_flags --evnode.da.signing_addresses $DA_SIGNING_ADDRESSES"
 	log "DEBUG" "Added DA signing addresses flag: $DA_SIGNING_ADDRESSES"
 fi
 
