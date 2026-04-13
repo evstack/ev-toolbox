@@ -5,6 +5,15 @@ All notable changes to the EV-Stacks deployment framework will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-04-13
+
+### Changed
+
+- **Dependencies**:
+  - Upgraded ghcr.io/evstack/ev-node-evm to `v1.1.0`
+  - Upgraded ghcr.io/celestiaorg/celestia-app to `v8.0.1-mocha`
+  - Upgraded ghcr.io/celestiaorg/celestia-node to `v0.30.2-mocha`
+
 ## [2.0.0] - 2026-03-16
 
 ### Changed
